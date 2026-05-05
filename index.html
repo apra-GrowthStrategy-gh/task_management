@@ -6,6 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f5f1e8">
 <title>Task Roadmap</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<meta name="apple-mobile-web-app-title" content="Roadmap">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -58,13 +63,59 @@
   .sync-indicator.error { background: var(--red-soft); color: var(--red); }
   .sync-indicator.offline { background: var(--line-soft); color: var(--ink-mute); }
 
-  .switcher { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+  .switcher { display: flex; gap: 0; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
   .switch-btn { padding: 14px 24px 16px; background: transparent; border: none; border-bottom: 2px solid transparent; font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink-mute); cursor: pointer; transition: all 0.25s ease; margin-bottom: -1px; }
   .switch-btn .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-right: 8px; vertical-align: 2px; }
   .switch-btn.active { color: var(--ink); border-bottom-color: var(--accent); }
   .switch-btn.active .num { color: var(--accent); }
 
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 28px; }
+  /* Tag filter chips */
+  .filter-row { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .filter-row .filter-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-right: 4px;
+  }
+  .tag-chip {
+    padding: 6px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-radius: 100px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .tag-chip .tag-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+  }
+  .tag-chip.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .tag-chip.active .tag-count { color: var(--bg); opacity: 0.7; }
+  .tag-chip .tag-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .tag-chip.manage-btn {
+    border-style: dashed;
+    color: var(--ink-mute);
+    margin-left: auto;
+  }
+  .tag-chip.manage-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
   .stat { background: var(--bg-card); padding: 16px 18px; }
   .stat .label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; line-height: 1.3; }
   .stat .value { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; line-height: 1; }
@@ -81,11 +132,73 @@
   .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
   .btn.ghost:hover, .btn.ghost:active { background: var(--bg-card); border-color: var(--ink); }
 
+  .archive-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    cursor: pointer;
+    user-select: none;
+  }
+  .archive-toggle:hover { color: var(--ink); }
+  .archive-toggle input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); }
+
   .roadmap { display: none; }
   .roadmap.active { display: block; }
-  .project-card { background: var(--bg-card); border: 1px solid var(--line); margin-bottom: 20px; overflow: hidden; }
-  .project-head { padding: 18px 22px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to right, rgba(184,70,42,0.02), transparent); gap: 12px; }
+  .project-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+  }
+  .project-card.archived { opacity: 0.5; background: var(--line-soft); }
+  .project-card.dragging { opacity: 0.4; }
+  .project-card.drag-over-top { border-top: 3px solid var(--accent); }
+  .project-card.drag-over-bottom { border-bottom: 3px solid var(--accent); }
+
+  .project-head {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to right, rgba(184,70,42,0.02), transparent);
+    gap: 12px;
+  }
+  .drag-handle {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-mute);
+    cursor: grab;
+    flex-shrink: 0;
+    user-select: none;
+    touch-action: none;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .drag-handle:active { cursor: grabbing; color: var(--accent); }
   .project-head h3 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.35; flex: 1; min-width: 0; word-break: break-word; }
+  .project-tags-inline {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .tag-pill {
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-pill .tag-dot { width: 6px; height: 6px; border-radius: 50%; }
   .project-head .pj-meta { display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); flex-shrink: 0; }
   .progress-circle { width: 36px; height: 36px; position: relative; flex-shrink: 0; }
   .progress-circle svg { transform: rotate(-90deg); }
@@ -94,11 +207,34 @@
   .icon-btn { width: 32px; height: 32px; background: transparent; border: 1px solid var(--line); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink-mute); transition: all 0.2s ease; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
   .icon-btn:hover, .icon-btn:active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .icon-btn.danger:hover, .icon-btn.danger:active { background: var(--red); border-color: var(--red); }
+  .icon-btn.archive:hover, .icon-btn.archive:active { background: var(--gold); border-color: var(--gold); }
+
+  .project-head-main { flex: 1; min-width: 0; }
 
   .nodes { padding: 22px 18px 24px; position: relative; }
-  .node-row { display: grid; grid-template-columns: 32px 1fr; gap: 14px; position: relative; padding-bottom: 10px; }
-  .node-row::before { content: ''; position: absolute; left: 15px; top: 32px; bottom: -2px; width: 1px; background: var(--line); }
+  .node-row { display: grid; grid-template-columns: 18px 32px 1fr; gap: 8px; position: relative; padding-bottom: 10px; align-items: start; }
+  .node-row::before { content: ''; position: absolute; left: 41px; top: 32px; bottom: -2px; width: 1px; background: var(--line); }
   .node-row:last-of-type::before { display: none; }
+  .node-row.dragging { opacity: 0.4; }
+  .node-row.drag-over-top { box-shadow: 0 -2px 0 var(--accent); }
+  .node-row.drag-over-bottom { box-shadow: 0 2px 0 var(--accent); }
+
+  .node-drag-handle {
+    width: 18px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--line);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .node-drag-handle:hover { color: var(--ink-mute); }
+  .node-drag-handle:active { cursor: grabbing; color: var(--accent); }
+
   .node-marker { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--line); background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink-mute); z-index: 1; flex-shrink: 0; cursor: pointer; transition: all 0.2s ease; user-select: none; }
   .node-marker:active { transform: scale(0.92); }
   .node-row[data-status="done"] .node-marker { background: var(--green); border-color: var(--green); color: white; }
@@ -116,7 +252,7 @@
   .pill.due-soon { background: var(--amber-soft); border-color: var(--amber); color: #8a6820; }
   .node-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; padding: 8px 10px; background: var(--line-soft); border-left: 2px solid var(--gold); line-height: 1.6; word-break: break-word; }
 
-  .add-node-row { display: grid; grid-template-columns: 32px 1fr; gap: 14px; margin-top: 4px; }
+  .add-node-row { display: grid; grid-template-columns: 18px 32px 1fr; gap: 8px; margin-top: 4px; }
   .add-node-btn { background: transparent; border: 1px dashed var(--line); padding: 10px 14px; text-align: left; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--ink-mute); transition: all 0.2s ease; min-height: 40px; }
   .add-node-btn:hover, .add-node-btn:active { border-color: var(--accent); color: var(--accent); }
   .add-project-btn { width: 100%; padding: 18px; background: transparent; border: 1px dashed var(--line); cursor: pointer; font-family: 'Fraunces', serif; font-size: 15px; color: var(--ink-mute); transition: all 0.2s ease; margin-top: 12px; }
@@ -128,13 +264,28 @@
   .cycle-tab { padding: 10px 22px; background: var(--bg-card); border: 1px solid var(--line); cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); min-height: 40px; flex-shrink: 0; }
   .cycle-tab.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
   .routine-list { background: var(--bg-card); border: 1px solid var(--line); }
-  .routine-item { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line-soft); }
+  .routine-item { display: grid; grid-template-columns: 18px 28px 1fr auto auto; gap: 10px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line-soft); }
   .routine-item:last-child { border-bottom: none; }
+  .routine-item.dragging { opacity: 0.4; }
+  .routine-item.drag-over-top { box-shadow: 0 -2px 0 var(--accent); }
+  .routine-item.drag-over-bottom { box-shadow: 0 2px 0 var(--accent); }
+  .routine-drag-handle {
+    color: var(--line);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    font-size: 12px;
+    text-align: center;
+  }
+  .routine-drag-handle:hover { color: var(--ink-mute); }
+  .routine-drag-handle:active { cursor: grabbing; color: var(--accent); }
   .check { width: 26px; height: 26px; border: 1.5px solid var(--line); background: var(--bg-card); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; color: transparent; font-size: 14px; user-select: none; }
   .check:active { transform: scale(0.92); }
   .routine-item.done .check { background: var(--green); border-color: var(--green); color: white; }
   .routine-item.done .r-title { text-decoration: line-through; color: var(--ink-mute); }
+  .r-main { min-width: 0; }
   .r-title { font-size: 14px; font-weight: 500; word-break: break-word; cursor: pointer; }
+  .r-tags-inline { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
   .r-streak { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); padding: 3px 8px; background: rgba(168,138,74,0.1); border-radius: 100px; flex-shrink: 0; white-space: nowrap; }
   .r-actions { display: flex; gap: 4px; }
 
@@ -153,6 +304,67 @@
   .field .help-text { font-size: 11px; color: var(--ink-mute); margin-top: 5px; line-height: 1.5; }
   .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-soft); gap: 8px; }
   .modal-actions .right { display: flex; gap: 8px; }
+
+  /* Tag selector in modal */
+  .tag-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+  }
+  .tag-selector-chip {
+    padding: 6px 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--ink-soft);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .tag-selector-chip .tag-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .tag-selector-chip.selected {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .tag-selector-chip.add-new {
+    border-style: dashed;
+    color: var(--ink-mute);
+  }
+
+  /* Tag manager */
+  .tag-manage-list { margin-top: 8px; }
+  .tag-manage-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .tag-manage-item:last-child { border-bottom: none; }
+  .tag-manage-item .tag-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .tag-manage-item .tag-name { flex: 1; font-size: 14px; }
+  .tag-manage-item .tag-usage { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); }
+  .add-tag-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .add-tag-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+  }
 
   .help-section { margin-bottom: 22px; }
   .help-section h3 { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line-soft); }
@@ -184,6 +396,18 @@
   .test-result.success { background: var(--green-soft); color: var(--green); border-left: 3px solid var(--green); display: block; }
   .test-result.error { background: var(--red-soft); color: var(--red); border-left: 3px solid var(--red); display: block; }
 
+  /* Touch drag ghost */
+  .drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.85;
+    transform: rotate(-1deg);
+    box-shadow: var(--shadow-lift);
+    border: 1px solid var(--accent);
+    background: var(--bg-card);
+  }
+
   @media (max-width: 640px) {
     .app { padding: 18px 16px calc(60px + var(--safe-bottom)); }
     .header { flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 16px; margin-bottom: 20px; }
@@ -200,19 +424,20 @@
     .toolbar-left .desc { display: block; margin-left: 0; margin-top: 4px; }
     .toolbar-right { width: 100%; gap: 8px; }
     .toolbar-right .btn { flex: 1; }
-    .project-head { padding: 16px; flex-wrap: wrap; }
-    .project-head h3 { width: 100%; font-size: 17px; }
-    .project-head .pj-meta { width: 100%; justify-content: space-between; gap: 8px; }
-    .nodes { padding: 18px 14px 20px; }
-    .node-row { grid-template-columns: 28px 1fr; gap: 12px; }
-    .node-row::before { left: 13px; top: 28px; }
+    .project-head { padding: 14px; flex-wrap: wrap; }
+    .project-head-main { width: 100%; min-width: 0; }
+    .project-head h3 { font-size: 17px; }
+    .project-head .pj-meta { width: 100%; justify-content: space-between; gap: 8px; padding-left: 30px; }
+    .nodes { padding: 16px 12px 18px; }
+    .node-row { grid-template-columns: 16px 28px 1fr; gap: 6px; }
+    .node-row::before { left: 35px; top: 28px; }
     .node-marker { width: 28px; height: 28px; font-size: 11px; }
-    .add-node-row { grid-template-columns: 28px 1fr; gap: 12px; }
+    .add-node-row { grid-template-columns: 16px 28px 1fr; gap: 6px; }
     .field-row { grid-template-columns: 1fr; }
     .modal { padding: 22px 20px calc(22px + var(--safe-bottom)); max-height: 100vh; max-height: 100dvh; width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; }
     .modal-bg { padding: 0; align-items: flex-end; }
-    .routine-item { grid-template-columns: 26px 1fr auto; gap: 10px; padding: 14px; }
-    .routine-item .r-actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: -4px; }
+    .routine-item { grid-template-columns: 16px 26px 1fr auto; gap: 8px; padding: 12px 14px; }
+    .routine-item .r-actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: -2px; }
     .setup-screen { margin: 30px auto; }
     .setup-card { padding: 24px 20px; }
   }
@@ -220,7 +445,6 @@
 </head>
 <body>
 
-<!-- Setup screen (shown only on first load or when no config) -->
 <div id="setupScreen" class="setup-screen" style="display:none">
   <div class="brand">
     <div style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.18em; color:var(--ink-mute); margin-bottom:6px">— PERSONAL OPERATING SYSTEM —</div>
@@ -229,30 +453,14 @@
   <div class="setup-card">
     <h2>初期設定</h2>
     <p class="lead">GitHubリポジトリと連携して、複数の端末でデータを同期します。最初に一度だけ設定が必要です。</p>
-    <div class="field">
-      <label>GitHub ユーザー名</label>
-      <input id="setupUser" placeholder="例: apra-GrowthStrategy-gh" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>データ用リポジトリ名</label>
-      <input id="setupRepo" placeholder="例: task_management_data" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>Personal Access Token</label>
-      <input id="setupToken" type="password" placeholder="github_pat_..." autocomplete="off">
-      <div class="help-text">トークンはこの端末のブラウザにのみ保存され、外部に送信されません(GitHub APIを除く)。</div>
-    </div>
+    <div class="field"><label>GitHub ユーザー名</label><input id="setupUser" placeholder="例: apra-GrowthStrategy-gh" autocomplete="off"></div>
+    <div class="field"><label>データ用リポジトリ名</label><input id="setupRepo" placeholder="例: task_management_data" autocomplete="off"></div>
+    <div class="field"><label>Personal Access Token</label><input id="setupToken" type="password" placeholder="github_pat_..." autocomplete="off"><div class="help-text">トークンはこの端末のブラウザにのみ保存され、外部に送信されません(GitHub APIを除く)。</div></div>
     <div class="test-result" id="setupTestResult"></div>
-    <div class="modal-actions">
-      <span></span>
-      <div class="right">
-        <button class="btn" id="setupSaveBtn">接続テストして開始</button>
-      </div>
-    </div>
+    <div class="modal-actions"><span></span><div class="right"><button class="btn" id="setupSaveBtn">接続テストして開始</button></div></div>
   </div>
 </div>
 
-<!-- Main app -->
 <div class="app" id="mainApp" style="display:none">
   <header class="header">
     <div class="brand">
@@ -265,8 +473,8 @@
         <div id="metaSummary">loading...</div>
       </div>
       <div class="sync-indicator idle" id="syncIndicator">SYNCED</div>
-      <button class="icon-circle-btn" id="settingsBtn" aria-label="設定" title="設定">⚙</button>
-      <button class="icon-circle-btn" id="helpBtn" aria-label="使い方" title="使い方">i</button>
+      <button class="icon-circle-btn" id="settingsBtn" title="設定">⚙</button>
+      <button class="icon-circle-btn" id="helpBtn" title="使い方">i</button>
     </div>
   </header>
 
@@ -274,6 +482,8 @@
     <button class="switch-btn active" data-view="projects"><span class="num">01</span>Projects</button>
     <button class="switch-btn" data-view="routines"><span class="num">02</span>Routines</button>
   </nav>
+
+  <div class="filter-row" id="filterRow"></div>
 
   <div class="stats" id="statsRow"></div>
 
@@ -288,6 +498,11 @@
   <div class="loading" id="loadingView">LOADING FROM GITHUB...</div>
 
   <section class="roadmap" id="projectsView">
+    <label class="archive-toggle" id="archiveToggleLabel">
+      <input type="checkbox" id="showArchivedCheckbox">
+      <span>アーカイブ済みも表示</span>
+      <span id="archiveCount" style="margin-left:auto"></span>
+    </label>
     <div id="projectList"></div>
     <button class="add-project-btn" id="addProjectBtn">+ 新しいプロジェクトを追加</button>
   </section>
@@ -307,13 +522,15 @@
 </div>
 
 <script>
-  // ============ State ============
   const STATE = {
     view: 'projects',
     cycle: 'daily',
     projects: [],
     routines: { daily: [], weekly: [], monthly: [] },
     routineLastReset: { daily: '', weekly: '', monthly: '' },
+    tags: [],  // [{id, name, color}]
+    activeFilters: [], // tag IDs; empty means ALL
+    showArchived: false,
     sha: null,
     pendingSave: false,
     saveTimer: null
@@ -322,7 +539,18 @@
   const CACHE_KEY = 'task_roadmap_cache_v1';
   const DATA_FILE = 'data.json';
 
-  // ============ Config ============
+  // Tag color palette (rotates)
+  const TAG_COLORS = [
+    '#b8462a', // terracotta
+    '#a88a4a', // gold
+    '#4a7a4a', // green
+    '#5a6a8a', // blue-gray
+    '#8a5a8a', // purple
+    '#c89a3a', // amber
+    '#7a4a4a', // brown
+    '#4a8a8a', // teal
+  ];
+
   function getConfig() {
     try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); }
     catch (e) { return null; }
@@ -340,122 +568,106 @@
       'X-GitHub-Api-Version': '2022-11-28',
       ...(options.headers || {})
     };
-    const res = await fetch(url, { ...options, headers });
-    return res;
+    return fetch(url, { ...options, headers });
   }
-
   async function ghLoadData() {
     const res = await ghFetch(DATA_FILE);
-    if (res.status === 404) {
-      return { found: false };
-    }
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    }
+    if (res.status === 404) return { found: false };
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     const json = await res.json();
     const content = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ''))));
     return { found: true, data: JSON.parse(content), sha: json.sha };
   }
-
   async function ghSaveData(data, prevSha) {
     const json = JSON.stringify(data, null, 2);
     const b64 = btoa(unescape(encodeURIComponent(json)));
-    const body = {
-      message: `Update tasks · ${new Date().toISOString()}`,
-      content: b64,
-    };
+    const body = { message: `Update tasks · ${new Date().toISOString()}`, content: b64 };
     if (prevSha) body.sha = prevSha;
     const res = await ghFetch(DATA_FILE, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Save failed: HTTP ${res.status}: ${errText}`);
-    }
+    if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}: ${await res.text()}`);
     const result = await res.json();
     return result.content.sha;
   }
-
   async function ghTestConnection(user, repo, token) {
     const url = `https://api.github.com/repos/${user}/${repo}`;
-    const res = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-    });
-    if (res.status === 401) return { ok: false, msg: 'トークンが無効です。再生成してください。' };
-    if (res.status === 404) return { ok: false, msg: 'リポジトリが見つかりません。ユーザー名とリポジトリ名を確認してください。トークンの権限がそのリポジトリに付与されているかも確認を。' };
-    if (!res.ok) return { ok: false, msg: `エラー(HTTP ${res.status}): ${await res.text()}` };
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } });
+    if (res.status === 401) return { ok: false, msg: 'トークンが無効です。' };
+    if (res.status === 404) return { ok: false, msg: 'リポジトリが見つかりません。' };
+    if (!res.ok) return { ok: false, msg: `HTTP ${res.status}` };
     return { ok: true };
   }
 
-  // ============ Sync indicator ============
   function setSyncStatus(status, label) {
     const el = document.getElementById('syncIndicator');
     el.className = `sync-indicator ${status}`;
     el.textContent = label;
   }
+  function cacheSet(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, savedAt: Date.now() })); } catch (e) {} }
+  function cacheGet() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; } }
 
-  // ============ Cache (offline fallback) ============
-  function cacheSet(data) {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, savedAt: Date.now() })); }
-    catch (e) {}
-  }
-  function cacheGet() {
-    try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }
-    catch (e) { return null; }
-  }
-
-  // ============ Data load/save ============
   async function loadData() {
     setSyncStatus('syncing', 'LOADING');
     try {
       const result = await ghLoadData();
       if (result.found) {
-        Object.assign(STATE, result.data);
+        const data = result.data;
+        // Migrate legacy data: add tags, archived flag, etc.
+        STATE.projects = (data.projects || []).map(p => ({
+          ...p,
+          tagIds: p.tagIds || [],
+          archived: !!p.archived,
+          nodes: p.nodes || []
+        }));
+        STATE.routines = data.routines || { daily: [], weekly: [], monthly: [] };
+        ['daily','weekly','monthly'].forEach(c => {
+          STATE.routines[c] = STATE.routines[c].map(r => ({ ...r, tagIds: r.tagIds || [] }));
+        });
+        STATE.routineLastReset = data.routineLastReset || { daily:'', weekly:'', monthly:'' };
+        STATE.tags = data.tags || [];
         STATE.sha = result.sha;
-        cacheSet(result.data);
+        cacheSet(data);
         setSyncStatus('idle', 'SYNCED');
       } else {
-        // First time - seed defaults and save
         seedDefaults();
         await saveDataNow();
         setSyncStatus('idle', 'SYNCED');
       }
     } catch (e) {
-      console.warn('Load failed, using cache:', e);
+      console.warn('Load failed:', e);
       const cached = cacheGet();
       if (cached) {
-        Object.assign(STATE, cached.data);
-        setSyncStatus('offline', 'OFFLINE (CACHED)');
+        const data = cached.data;
+        STATE.projects = data.projects || [];
+        STATE.routines = data.routines || { daily: [], weekly: [], monthly: [] };
+        STATE.routineLastReset = data.routineLastReset || { daily:'', weekly:'', monthly:'' };
+        STATE.tags = data.tags || [];
+        setSyncStatus('offline', 'OFFLINE');
       } else {
         seedDefaults();
         setSyncStatus('error', 'LOAD ERROR');
-        setTimeout(() => alert('GitHubからのデータ読み込みに失敗しました。\n\n' + e.message + '\n\n設定を確認してください。'), 100);
       }
     }
     checkRoutineReset();
   }
-
   function debouncedSave() {
     if (STATE.saveTimer) clearTimeout(STATE.saveTimer);
     STATE.pendingSave = true;
     setSyncStatus('syncing', 'SAVING...');
-    // Save cache immediately
     cacheSet({
-      projects: STATE.projects,
-      routines: STATE.routines,
-      routineLastReset: STATE.routineLastReset
+      projects: STATE.projects, routines: STATE.routines,
+      routineLastReset: STATE.routineLastReset, tags: STATE.tags
     });
     STATE.saveTimer = setTimeout(saveDataNow, 1500);
   }
-
   async function saveDataNow() {
     if (STATE.saveTimer) { clearTimeout(STATE.saveTimer); STATE.saveTimer = null; }
     const data = {
-      projects: STATE.projects,
-      routines: STATE.routines,
-      routineLastReset: STATE.routineLastReset
+      projects: STATE.projects, routines: STATE.routines,
+      routineLastReset: STATE.routineLastReset, tags: STATE.tags
     };
     setSyncStatus('syncing', 'SAVING...');
     try {
@@ -466,14 +678,12 @@
       setSyncStatus('idle', 'SYNCED');
     } catch (e) {
       console.error('Save failed:', e);
-      // If sha conflict (someone else updated), refetch and retry once
       if (e.message.includes('409') || e.message.includes('sha')) {
         try {
           const fresh = await ghLoadData();
           STATE.sha = fresh.sha;
-          // For simplicity: warn user and reload from server
-          setSyncStatus('error', 'CONFLICT - RELOADING');
-          alert('別の端末で更新がありました。最新データを再読込します。');
+          setSyncStatus('error', 'CONFLICT');
+          alert('別の端末で更新がありました。最新を読み直します。');
           await loadData();
           render();
           return;
@@ -484,9 +694,11 @@
   }
 
   function seedDefaults() {
+    const tagWork = { id: pid(), name: '仕事', color: '#b8462a' };
+    const tagPriv = { id: pid(), name: 'プライベート', color: '#a88a4a' };
+    STATE.tags = [tagWork, tagPriv];
     STATE.projects = [{
-      id: pid(),
-      title: '事業計画書 改訂版作成',
+      id: pid(), title: '事業計画書 改訂版作成', tagIds: [tagWork.id], archived: false,
       nodes: [
         { id: pid(), title: '前期実績データの整理と確認', status: 'done', priority: 'high', due: '', note: '' },
         { id: pid(), title: '市場前提と KPI ツリーの再設計', status: 'doing', priority: 'high', due: '', note: '経営層レビュー前に固める' },
@@ -497,16 +709,16 @@
     }];
     STATE.routines = {
       daily: [
-        { id: pid(), title: '朝のキャッシュポジション確認', done: false, streak: 0 },
-        { id: pid(), title: '受信メール・Slack の処理', done: false, streak: 0 }
+        { id: pid(), title: '朝のキャッシュポジション確認', done: false, streak: 0, tagIds: [tagWork.id] },
+        { id: pid(), title: '受信メール・Slack の処理', done: false, streak: 0, tagIds: [tagWork.id] }
       ],
       weekly: [
-        { id: pid(), title: '週次キャッシュレポート作成', done: false, streak: 0 },
-        { id: pid(), title: 'チーム1on1の振り返り', done: false, streak: 0 }
+        { id: pid(), title: '週次キャッシュレポート作成', done: false, streak: 0, tagIds: [tagWork.id] },
+        { id: pid(), title: 'チーム1on1の振り返り', done: false, streak: 0, tagIds: [tagWork.id] }
       ],
       monthly: [
-        { id: pid(), title: '月次決算データの取りまとめ', done: false, streak: 0 },
-        { id: pid(), title: '月次グロース指標レビュー', done: false, streak: 0 }
+        { id: pid(), title: '月次決算データの取りまとめ', done: false, streak: 0, tagIds: [tagWork.id] },
+        { id: pid(), title: '月次グロース指標レビュー', done: false, streak: 0, tagIds: [tagWork.id] }
       ]
     };
   }
@@ -520,30 +732,21 @@
     let changed = false;
     if (STATE.routineLastReset.daily !== today) {
       if (STATE.routineLastReset.daily) {
-        STATE.routines.daily.forEach(r => {
-          if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0;
-          r.done = false;
-        });
+        STATE.routines.daily.forEach(r => { if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0; r.done = false; });
         changed = true;
       }
       STATE.routineLastReset.daily = today;
     }
     if (STATE.routineLastReset.weekly !== weekKey) {
       if (STATE.routineLastReset.weekly) {
-        STATE.routines.weekly.forEach(r => {
-          if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0;
-          r.done = false;
-        });
+        STATE.routines.weekly.forEach(r => { if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0; r.done = false; });
         changed = true;
       }
       STATE.routineLastReset.weekly = weekKey;
     }
     if (STATE.routineLastReset.monthly !== monthKey) {
       if (STATE.routineLastReset.monthly) {
-        STATE.routines.monthly.forEach(r => {
-          if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0;
-          r.done = false;
-        });
+        STATE.routines.monthly.forEach(r => { if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0; r.done = false; });
         changed = true;
       }
       STATE.routineLastReset.monthly = monthKey;
@@ -559,9 +762,29 @@
     return target.getFullYear() + '-W' + String(wn).padStart(2, '0');
   }
 
+  // ============ Filter logic ============
+  function matchesFilter(tagIds) {
+    if (STATE.activeFilters.length === 0) return true;
+    if (!tagIds || tagIds.length === 0) {
+      // Show untagged items only if "untagged" filter selected
+      return STATE.activeFilters.includes('__untagged__');
+    }
+    return tagIds.some(t => STATE.activeFilters.includes(t));
+  }
+
+  function getFilteredProjects() {
+    return STATE.projects.filter(p => {
+      if (!STATE.showArchived && p.archived) return false;
+      return matchesFilter(p.tagIds);
+    });
+  }
+  function getFilteredRoutines(cycle) {
+    return STATE.routines[cycle].filter(r => matchesFilter(r.tagIds));
+  }
+
   // ============ Render ============
   function render() {
-    renderHeader(); renderStats(); renderToolbar();
+    renderHeader(); renderFilters(); renderStats(); renderToolbar(); renderArchiveToggle();
     if (STATE.view === 'projects') {
       document.getElementById('projectsView').classList.add('active');
       document.getElementById('routinesView').classList.remove('active');
@@ -583,22 +806,72 @@
     const totalRoutines = STATE.routines.daily.length + STATE.routines.weekly.length + STATE.routines.monthly.length;
     document.getElementById('metaSummary').textContent = `${STATE.projects.length} PJ · ${totalNodes} NODES · ${totalRoutines} RTN`;
   }
+  function renderFilters() {
+    const row = document.getElementById('filterRow');
+    let html = `<span class="filter-label">FILTER</span>`;
+    const allActive = STATE.activeFilters.length === 0;
+    html += `<div class="tag-chip ${allActive ? 'active' : ''}" data-act="filter-all">ALL</div>`;
+    STATE.tags.forEach(tag => {
+      const active = STATE.activeFilters.includes(tag.id);
+      const count = countItemsWithTag(tag.id);
+      html += `<div class="tag-chip ${active ? 'active' : ''}" data-act="filter-tag" data-id="${tag.id}">
+        <span class="tag-dot" style="background:${tag.color}"></span>
+        ${escapeHtml(tag.name)}
+        <span class="tag-count">${count}</span>
+      </div>`;
+    });
+    // Untagged filter (only show if there are untagged items)
+    const untaggedCount = countUntagged();
+    if (untaggedCount > 0) {
+      const active = STATE.activeFilters.includes('__untagged__');
+      html += `<div class="tag-chip ${active ? 'active' : ''}" data-act="filter-tag" data-id="__untagged__">
+        <span class="tag-dot" style="background:#ccc"></span>
+        未分類
+        <span class="tag-count">${untaggedCount}</span>
+      </div>`;
+    }
+    html += `<div class="tag-chip manage-btn" data-act="manage-tags">⚙ タグ管理</div>`;
+    row.innerHTML = html;
+  }
+  function countItemsWithTag(tagId) {
+    let c = 0;
+    STATE.projects.forEach(p => { if ((p.tagIds || []).includes(tagId)) c++; });
+    ['daily','weekly','monthly'].forEach(cy => {
+      STATE.routines[cy].forEach(r => { if ((r.tagIds || []).includes(tagId)) c++; });
+    });
+    return c;
+  }
+  function countUntagged() {
+    let c = 0;
+    STATE.projects.forEach(p => { if (!p.tagIds || p.tagIds.length === 0) c++; });
+    ['daily','weekly','monthly'].forEach(cy => {
+      STATE.routines[cy].forEach(r => { if (!r.tagIds || r.tagIds.length === 0) c++; });
+    });
+    return c;
+  }
+  function renderArchiveToggle() {
+    const archived = STATE.projects.filter(p => p.archived).length;
+    document.getElementById('archiveCount').textContent = archived > 0 ? `${archived} archived` : '';
+    document.getElementById('archiveToggleLabel').style.display = STATE.view === 'projects' ? 'flex' : 'none';
+    document.getElementById('showArchivedCheckbox').checked = STATE.showArchived;
+  }
   function renderStats() {
     const row = document.getElementById('statsRow');
     if (STATE.view === 'projects') {
-      const allNodes = STATE.projects.flatMap(p => p.nodes);
+      const filtered = getFilteredProjects();
+      const allNodes = filtered.flatMap(p => p.nodes);
       const done = allNodes.filter(n => n.status === 'done').length;
       const doing = allNodes.filter(n => n.status === 'doing').length;
       const blocked = allNodes.filter(n => n.status === 'blocked').length;
       const total = allNodes.length || 1;
       const pct = Math.round((done / total) * 100);
       row.innerHTML = `
-        <div class="stat"><div class="label">Active Projects</div><div class="value">${STATE.projects.length}<span class="unit">件</span></div></div>
+        <div class="stat"><div class="label">Active Projects</div><div class="value">${filtered.length}<span class="unit">件</span></div></div>
         <div class="stat"><div class="label">In Progress</div><div class="value">${doing}<span class="unit">node</span></div></div>
         <div class="stat"><div class="label">Blocked</div><div class="value">${blocked}<span class="unit">node</span></div></div>
         <div class="stat"><div class="label">Completion</div><div class="value">${pct}<span class="unit">%</span></div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
     } else {
-      const cur = STATE.routines[STATE.cycle];
+      const cur = getFilteredRoutines(STATE.cycle);
       const done = cur.filter(r => r.done).length;
       const total = cur.length || 1;
       const pct = Math.round((done / total) * 100);
@@ -617,11 +890,21 @@
   }
   function renderProjects() {
     const list = document.getElementById('projectList');
-    if (STATE.projects.length === 0) {
-      list.innerHTML = `<div class="empty"><div class="empty-art">— blank canvas —</div><p>プロジェクトを追加して、最初のロードマップを描きましょう</p></div>`;
+    const filtered = getFilteredProjects();
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-art">— blank canvas —</div><p>${STATE.activeFilters.length > 0 ? '該当するプロジェクトがありません' : 'プロジェクトを追加して、最初のロードマップを描きましょう'}</p></div>`;
       return;
     }
-    list.innerHTML = STATE.projects.map(p => renderProject(p)).join('');
+    list.innerHTML = filtered.map(p => renderProject(p)).join('');
+  }
+  function getTagById(id) { return STATE.tags.find(t => t.id === id); }
+  function renderTagPills(tagIds) {
+    if (!tagIds || tagIds.length === 0) return '';
+    return `<div class="project-tags-inline">${tagIds.map(tid => {
+      const tag = getTagById(tid);
+      if (!tag) return '';
+      return `<span class="tag-pill" style="background:${tag.color}22; color:${tag.color}"><span class="tag-dot" style="background:${tag.color}"></span>${escapeHtml(tag.name)}</span>`;
+    }).join('')}</div>`;
   }
   function renderProject(p) {
     const total = p.nodes.length || 1;
@@ -629,9 +912,13 @@
     const pct = Math.round((done / total) * 100);
     const r = 14, c = 2 * Math.PI * r, off = c - (pct / 100) * c;
     return `
-      <div class="project-card">
+      <div class="project-card ${p.archived ? 'archived' : ''}" data-pjid="${p.id}" draggable="true">
         <div class="project-head">
-          <h3>${escapeHtml(p.title)}</h3>
+          <div class="drag-handle" data-drag="project" data-id="${p.id}">⋮⋮</div>
+          <div class="project-head-main">
+            <h3>${escapeHtml(p.title)}</h3>
+            ${renderTagPills(p.tagIds)}
+          </div>
           <div class="pj-meta">
             <span>${done}/${p.nodes.length}</span>
             <div class="progress-circle">
@@ -642,14 +929,16 @@
               <div class="pc-text">${pct}</div>
             </div>
             <div class="pj-actions">
-              <button class="icon-btn" data-act="edit-pj" data-id="${p.id}">✎</button>
-              <button class="icon-btn danger" data-act="del-pj" data-id="${p.id}">×</button>
+              <button class="icon-btn" data-act="edit-pj" data-id="${p.id}" title="編集">✎</button>
+              <button class="icon-btn archive" data-act="toggle-archive-pj" data-id="${p.id}" title="${p.archived ? '復元' : 'アーカイブ'}">${p.archived ? '↻' : '⊟'}</button>
+              <button class="icon-btn danger" data-act="del-pj" data-id="${p.id}" title="削除">×</button>
             </div>
           </div>
         </div>
-        <div class="nodes">
+        <div class="nodes" data-pjid="${p.id}">
           ${p.nodes.map((n, i) => renderNode(p.id, n, i)).join('')}
           <div class="add-node-row">
+            <div></div>
             <div></div>
             <button class="add-node-btn" data-act="add-node" data-pjid="${p.id}">+ アクションを追加</button>
           </div>
@@ -670,7 +959,8 @@
       duePill = `<span class="pill ${cls}">${n.due}</span>`;
     }
     return `
-      <div class="node-row" data-status="${n.status}">
+      <div class="node-row" data-status="${n.status}" data-nid="${n.id}" draggable="true">
+        <div class="node-drag-handle" data-drag="node" data-pjid="${pjId}" data-id="${n.id}">⋮⋮</div>
         <div class="node-marker" data-act="cycle-status" data-pjid="${pjId}" data-id="${n.id}">${marker}</div>
         <div class="node-body" data-act="edit-node" data-pjid="${pjId}" data-id="${n.id}">
           <div class="node-title">${escapeHtml(n.title)}</div>
@@ -688,15 +978,19 @@
       t.classList.toggle('active', t.dataset.cycle === STATE.cycle);
     });
     const list = document.getElementById('routineList');
-    const items = STATE.routines[STATE.cycle];
+    const items = getFilteredRoutines(STATE.cycle);
     if (items.length === 0) {
-      list.innerHTML = `<div class="empty"><div class="empty-art">— no routines yet —</div><p>習慣化したいタスクを追加しましょう</p></div>`;
+      list.innerHTML = `<div class="empty"><div class="empty-art">— no routines —</div><p>${STATE.activeFilters.length > 0 ? '該当するルーティンがありません' : '習慣化したいタスクを追加しましょう'}</p></div>`;
       return;
     }
     list.innerHTML = items.map(r => `
-      <div class="routine-item ${r.done ? 'done' : ''}">
+      <div class="routine-item ${r.done ? 'done' : ''}" data-rid="${r.id}" draggable="true">
+        <div class="routine-drag-handle" data-drag="routine" data-id="${r.id}">⋮⋮</div>
         <div class="check" data-act="toggle-r" data-id="${r.id}">✓</div>
-        <div class="r-title" data-act="edit-r" data-id="${r.id}">${escapeHtml(r.title)}</div>
+        <div class="r-main">
+          <div class="r-title" data-act="edit-r" data-id="${r.id}">${escapeHtml(r.title)}</div>
+          ${renderTagPills(r.tagIds)}
+        </div>
         ${(r.streak || 0) > 0 ? `<div class="r-streak">🔥 ${r.streak}</div>` : '<div></div>'}
         <div class="r-actions">
           <button class="icon-btn" data-act="edit-r" data-id="${r.id}">✎</button>
@@ -709,6 +1003,182 @@
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // ============ Drag & Drop (with touch support) ============
+  let dragState = null; // { type, id, parentId?, ghost? }
+
+  function getNextColor() {
+    return TAG_COLORS[STATE.tags.length % TAG_COLORS.length];
+  }
+
+  function attachDragHandlers() {
+    // Desktop HTML5 drag
+    document.querySelectorAll('[draggable="true"]').forEach(el => {
+      el.addEventListener('dragstart', onDragStart);
+      el.addEventListener('dragover', onDragOver);
+      el.addEventListener('drop', onDrop);
+      el.addEventListener('dragend', onDragEnd);
+      el.addEventListener('dragleave', onDragLeave);
+    });
+    // Touch drag (long-press to initiate)
+    document.querySelectorAll('[data-drag]').forEach(handle => {
+      handle.addEventListener('touchstart', onTouchStart, { passive: false });
+    });
+  }
+
+  function onDragStart(e) {
+    const card = e.currentTarget;
+    if (card.classList.contains('project-card')) {
+      dragState = { type: 'project', id: card.dataset.pjid };
+    } else if (card.classList.contains('node-row')) {
+      const pjid = card.closest('.nodes').dataset.pjid;
+      dragState = { type: 'node', id: card.dataset.nid, parentId: pjid };
+    } else if (card.classList.contains('routine-item')) {
+      dragState = { type: 'routine', id: card.dataset.rid };
+    }
+    if (!dragState) return;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', dragState.id); } catch (e) {}
+  }
+  function onDragOver(e) {
+    if (!dragState) return;
+    e.preventDefault();
+    const target = e.currentTarget;
+    // Only allow same-type drops
+    if (dragState.type === 'project' && !target.classList.contains('project-card')) return;
+    if (dragState.type === 'node' && !target.classList.contains('node-row')) return;
+    if (dragState.type === 'routine' && !target.classList.contains('routine-item')) return;
+    // For nodes, must be in same project
+    if (dragState.type === 'node') {
+      const pjid = target.closest('.nodes').dataset.pjid;
+      if (pjid !== dragState.parentId) return;
+    }
+    const rect = target.getBoundingClientRect();
+    const isTopHalf = (e.clientY - rect.top) < rect.height / 2;
+    target.classList.remove('drag-over-top', 'drag-over-bottom');
+    target.classList.add(isTopHalf ? 'drag-over-top' : 'drag-over-bottom');
+  }
+  function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over-top', 'drag-over-bottom');
+  }
+  function onDrop(e) {
+    if (!dragState) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.currentTarget;
+    target.classList.remove('drag-over-top', 'drag-over-bottom');
+    const rect = target.getBoundingClientRect();
+    const isTopHalf = (e.clientY - rect.top) < rect.height / 2;
+    let targetId;
+    if (dragState.type === 'project') targetId = target.dataset.pjid;
+    else if (dragState.type === 'node') targetId = target.dataset.nid;
+    else if (dragState.type === 'routine') targetId = target.dataset.rid;
+    if (targetId === dragState.id) return;
+    performReorder(dragState, targetId, isTopHalf ? 'before' : 'after');
+  }
+  function onDragEnd(e) {
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => el.classList.remove('drag-over-top','drag-over-bottom'));
+    dragState = null;
+  }
+
+  // Touch-based drag
+  function onTouchStart(e) {
+    const handle = e.currentTarget;
+    const type = handle.dataset.drag;
+    const id = handle.dataset.id;
+    const parentId = handle.dataset.pjid;
+    e.preventDefault();
+    const card = handle.closest(type === 'project' ? '.project-card' : type === 'node' ? '.node-row' : '.routine-item');
+    if (!card) return;
+    dragState = { type, id, parentId };
+    card.classList.add('dragging');
+
+    // Create ghost
+    const rect = card.getBoundingClientRect();
+    const ghost = card.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    ghost.classList.remove('dragging');
+    ghost.style.width = rect.width + 'px';
+    ghost.style.left = rect.left + 'px';
+    ghost.style.top = rect.top + 'px';
+    document.body.appendChild(ghost);
+    dragState.ghost = ghost;
+    dragState.offsetY = e.touches[0].clientY - rect.top;
+
+    const onMove = (ev) => {
+      ev.preventDefault();
+      const t = ev.touches[0];
+      ghost.style.top = (t.clientY - dragState.offsetY) + 'px';
+      // Find drop target under finger
+      ghost.style.display = 'none';
+      const elUnder = document.elementFromPoint(t.clientX, t.clientY);
+      ghost.style.display = '';
+      let targetCard = null;
+      if (type === 'project') targetCard = elUnder?.closest('.project-card');
+      else if (type === 'node') {
+        targetCard = elUnder?.closest('.node-row');
+        // Must be same project
+        if (targetCard) {
+          const tpjid = targetCard.closest('.nodes')?.dataset.pjid;
+          if (tpjid !== parentId) targetCard = null;
+        }
+      }
+      else if (type === 'routine') targetCard = elUnder?.closest('.routine-item');
+      // Clear previous
+      document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => el.classList.remove('drag-over-top','drag-over-bottom'));
+      if (targetCard && targetCard !== card) {
+        const r = targetCard.getBoundingClientRect();
+        const isTop = (t.clientY - r.top) < r.height / 2;
+        targetCard.classList.add(isTop ? 'drag-over-top' : 'drag-over-bottom');
+        dragState.dropTarget = targetCard;
+        dragState.dropPosition = isTop ? 'before' : 'after';
+      } else {
+        dragState.dropTarget = null;
+      }
+    };
+    const onEnd = () => {
+      handle.removeEventListener('touchmove', onMove);
+      handle.removeEventListener('touchend', onEnd);
+      handle.removeEventListener('touchcancel', onEnd);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+      document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+      document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => el.classList.remove('drag-over-top','drag-over-bottom'));
+      if (dragState && dragState.dropTarget) {
+        let targetId;
+        if (type === 'project') targetId = dragState.dropTarget.dataset.pjid;
+        else if (type === 'node') targetId = dragState.dropTarget.dataset.nid;
+        else if (type === 'routine') targetId = dragState.dropTarget.dataset.rid;
+        if (targetId && targetId !== id) {
+          performReorder({ type, id, parentId }, targetId, dragState.dropPosition);
+        }
+      }
+      dragState = null;
+    };
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+  }
+
+  function performReorder({ type, id, parentId }, targetId, position) {
+    let arr;
+    if (type === 'project') arr = STATE.projects;
+    else if (type === 'node') arr = STATE.projects.find(p => p.id === parentId)?.nodes;
+    else if (type === 'routine') arr = STATE.routines[STATE.cycle];
+    if (!arr) return;
+    const fromIdx = arr.findIndex(x => x.id === id);
+    const toIdx = arr.findIndex(x => x.id === targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const [item] = arr.splice(fromIdx, 1);
+    let insertIdx = arr.findIndex(x => x.id === targetId);
+    if (position === 'after') insertIdx++;
+    arr.splice(insertIdx, 0, item);
+    render();
+    debouncedSave();
+  }
+
   // ============ Modals ============
   function openModal(html) {
     document.getElementById('modalContent').innerHTML = html;
@@ -716,43 +1186,86 @@
   }
   function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
 
-  function modalHelp() {
+  function renderTagSelectorChips(selectedIds) {
+    let html = STATE.tags.map(tag => {
+      const sel = selectedIds.includes(tag.id);
+      return `<div class="tag-selector-chip ${sel ? 'selected' : ''}" data-act="toggle-tag-select" data-id="${tag.id}">
+        <span class="tag-dot" style="background:${tag.color}"></span>${escapeHtml(tag.name)}
+      </div>`;
+    }).join('');
+    html += `<div class="tag-selector-chip add-new" data-act="quick-add-tag">+ 新規タグ</div>`;
+    return html;
+  }
+
+  function modalManageTags() {
+    const usage = {};
+    STATE.tags.forEach(t => { usage[t.id] = countItemsWithTag(t.id); });
     openModal(`
-      <h2>使い方</h2>
-      <div class="modal-sub">— Task Roadmap 操作ルール</div>
-      <div class="help-section">
-        <h3>2つのモード</h3>
-        <div class="help-rule"><span class="key">Projects</span><span class="val"><strong>始まりと終わりがある仕事</strong>。事業計画作成、新システム導入など。</span></div>
-        <div class="help-rule"><span class="key">Routines</span><span class="val"><strong>繰り返し回す仕事</strong>。日次キャッシュ確認、週次レポートなど。</span></div>
+      <h2>タグ管理</h2>
+      <div class="modal-sub">— 自由にタグを追加・編集・削除</div>
+      <div class="tag-manage-list" id="tagManageList">
+        ${STATE.tags.length === 0 ? '<div style="color:var(--ink-mute); text-align:center; padding:20px 0; font-size:13px">タグがありません</div>' : STATE.tags.map(tag => `
+          <div class="tag-manage-item">
+            <span class="tag-dot" style="background:${tag.color}; cursor:pointer" data-act="cycle-tag-color" data-id="${tag.id}" title="色を変更"></span>
+            <input class="tag-name" data-act="rename-tag" data-id="${tag.id}" value="${escapeHtml(tag.name)}" style="border:none; background:transparent; font-size:14px; padding:6px 0; outline:none">
+            <span class="tag-usage">${usage[tag.id]} item${usage[tag.id] !== 1 ? 's' : ''}</span>
+            <button class="icon-btn danger" data-act="del-tag" data-id="${tag.id}">×</button>
+          </div>
+        `).join('')}
       </div>
-      <div class="help-section">
-        <h3>Projects モード</h3>
-        <div class="help-rule"><span class="key">丸タップ</span><span class="val">ノード左の<strong>丸印</strong>をタップで、ステータスが循環します。</span></div>
-        <div class="status-legend">
-          <div class="legend-row"><div class="legend-dot todo">01</div>未着手 → タップ</div>
-          <div class="legend-row"><div class="legend-dot doing">●</div>進行中(強調) → タップ</div>
-          <div class="legend-row"><div class="legend-dot done">✓</div>完了 → タップ</div>
-          <div class="legend-row"><div class="legend-dot blocked">!</div>ブロック中 → タップで未着手に戻る</div>
-        </div>
-        <div class="help-rule" style="margin-top:14px"><span class="key">本文タップ</span><span class="val">タイトル、優先度、期限、メモを<strong>編集</strong>。</span></div>
-        <div class="help-rule"><span class="key">期限色</span><span class="val">3日以内は<span style="color:#8a6820">アンバー</span>、超過は<span style="color:var(--red)">赤</span>。</span></div>
-      </div>
-      <div class="help-section">
-        <h3>Routines モード</h3>
-        <div class="help-rule"><span class="key">チェック</span><span class="val">左の<strong>四角</strong>をタップで完了/未完了をトグル。</span></div>
-        <div class="help-rule"><span class="key">🔥 ストリーク</span><span class="val"><strong>連続達成サイクル数</strong>。サイクル切替時に自動更新。</span></div>
-        <div class="help-rule"><span class="key">サイクル</span><span class="val">DAILY / WEEKLY / MONTHLY を切替。</span></div>
-      </div>
-      <div class="help-section">
-        <h3>同期</h3>
-        <div class="help-rule"><span class="key">SYNCED</span><span class="val">変更はGitHubに自動保存。<strong>1.5秒後</strong>にまとめてコミット。</span></div>
-        <div class="help-rule"><span class="key">OFFLINE</span><span class="val">通信失敗時は端末内に保存。次回オンライン時に同期。</span></div>
-        <div class="help-rule"><span class="key">↻ 再読込</span><span class="val">他端末の最新データを取得。</span></div>
+      <div class="add-tag-row">
+        <input id="newTagName" placeholder="新しいタグ名">
+        <button class="btn" data-act="add-tag">+ 追加</button>
       </div>
       <div class="modal-actions">
         <span></span>
-        <div class="right"><button class="btn" data-act="modal-close">閉じる</button></div>
+        <div class="right"><button class="btn" data-act="modal-close">完了</button></div>
       </div>
+    `);
+  }
+
+  function modalHelp() {
+    openModal(`
+      <h2>使い方</h2>
+      <div class="modal-sub">— Task Roadmap</div>
+      <div class="help-section">
+        <h3>2つのモード</h3>
+        <div class="help-rule"><span class="key">Projects</span><span class="val"><strong>始まりと終わりがある仕事</strong>。完了したらアーカイブ可。</span></div>
+        <div class="help-rule"><span class="key">Routines</span><span class="val"><strong>繰り返し回す仕事</strong>。日次/週次/月次サイクル。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>タグとフィルタ</h3>
+        <div class="help-rule"><span class="key">タグ</span><span class="val">自由に追加・色変更可能。1項目に複数タグ付与可。<strong>「⚙ タグ管理」</strong>から編集。</span></div>
+        <div class="help-rule"><span class="key">フィルタ</span><span class="val">画面上のタグチップで絞り込み。<strong>複数選択可</strong>(OR検索)。「ALL」で解除。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>並べ替え</h3>
+        <div class="help-rule"><span class="key">⋮⋮</span><span class="val">左の<strong>ドラッグハンドル</strong>を掴んで上下に動かすと、順序を変更できます。プロジェクト・ノード・ルーティンすべてで可能。</span></div>
+        <div class="help-rule"><span class="key">PC</span><span class="val">ハンドルをマウスでドラッグ。</span></div>
+        <div class="help-rule"><span class="key">スマホ</span><span class="val">ハンドルを<strong>長押し→そのまま指を動かす</strong>。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>アーカイブ</h3>
+        <div class="help-rule"><span class="key">⊟</span><span class="val">プロジェクトカードの<strong>アーカイブボタン</strong>。完了したものを片付けて視界をスッキリ。</span></div>
+        <div class="help-rule"><span class="key">↻</span><span class="val">アーカイブ済みプロジェクトの<strong>復元ボタン</strong>。</span></div>
+        <div class="help-rule"><span class="key">表示切替</span><span class="val">「アーカイブ済みも表示」でアーカイブ済みも一覧に表示。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>ステータス操作</h3>
+        <div class="help-rule"><span class="key">丸タップ</span><span class="val">未着手→進行中→完了→ブロック中、と循環。</span></div>
+        <div class="status-legend">
+          <div class="legend-row"><div class="legend-dot todo">01</div>未着手</div>
+          <div class="legend-row"><div class="legend-dot doing">●</div>進行中</div>
+          <div class="legend-row"><div class="legend-dot done">✓</div>完了</div>
+          <div class="legend-row"><div class="legend-dot blocked">!</div>ブロック中</div>
+        </div>
+      </div>
+      <div class="help-section">
+        <h3>同期</h3>
+        <div class="help-rule"><span class="key">SYNCED</span><span class="val">変更はGitHubに自動保存。</span></div>
+        <div class="help-rule"><span class="key">↻ 再読込</span><span class="val">他端末の最新を取得。</span></div>
+      </div>
+      <div class="modal-actions"><span></span><div class="right"><button class="btn" data-act="modal-close">閉じる</button></div></div>
     `);
   }
 
@@ -761,21 +1274,11 @@
     openModal(`
       <h2>設定</h2>
       <div class="modal-sub">— GitHub接続情報</div>
-      <div class="field">
-        <label>GitHub ユーザー名</label>
-        <input id="cfg-user" value="${escapeHtml(cfg.user || '')}">
-      </div>
-      <div class="field">
-        <label>リポジトリ名</label>
-        <input id="cfg-repo" value="${escapeHtml(cfg.repo || '')}">
-      </div>
-      <div class="field">
-        <label>Personal Access Token</label>
-        <input id="cfg-token" type="password" placeholder="変更する場合のみ入力" autocomplete="off">
-        <div class="help-text">空欄のまま保存すると、現在のトークンが維持されます。</div>
-      </div>
+      <div class="field"><label>GitHub ユーザー名</label><input id="cfg-user" value="${escapeHtml(cfg.user || '')}"></div>
+      <div class="field"><label>リポジトリ名</label><input id="cfg-repo" value="${escapeHtml(cfg.repo || '')}"></div>
+      <div class="field"><label>Personal Access Token</label><input id="cfg-token" type="password" placeholder="変更する場合のみ入力"><div class="help-text">空欄のまま保存すると現在のトークンを維持。</div></div>
       <div class="modal-actions">
-        <span><button class="btn ghost" style="color:var(--red);border-color:var(--red)" data-act="reset-config">設定を削除</button></span>
+        <span><button class="btn ghost" style="color:var(--red);border-color:var(--red)" data-act="reset-config">設定削除</button></span>
         <div class="right">
           <button class="btn ghost" data-act="modal-close">キャンセル</button>
           <button class="btn" data-act="save-config">保存</button>
@@ -789,6 +1292,7 @@
       <h2>New Project</h2>
       <div class="modal-sub">— 新しいプロジェクト</div>
       <div class="field"><label>プロジェクト名</label><input id="m-title" placeholder="例: 事業計画書改訂版作成"></div>
+      <div class="field"><label>タグ</label><div class="tag-selector" id="tag-selector">${renderTagSelectorChips([])}</div></div>
       <div class="modal-actions"><span></span><div class="right">
         <button class="btn ghost" data-act="modal-close">キャンセル</button>
         <button class="btn" data-act="modal-save-pj">追加</button>
@@ -801,6 +1305,7 @@
       <h2>Edit Project</h2>
       <div class="modal-sub">— プロジェクトを編集</div>
       <div class="field"><label>プロジェクト名</label><input id="m-title" value="${escapeHtml(p.title)}"></div>
+      <div class="field"><label>タグ</label><div class="tag-selector" id="tag-selector">${renderTagSelectorChips(p.tagIds || [])}</div></div>
       <div class="modal-actions"><span></span><div class="right">
         <button class="btn ghost" data-act="modal-close">キャンセル</button>
         <button class="btn" data-act="modal-save-pj-edit" data-id="${p.id}">保存</button>
@@ -813,26 +1318,22 @@
     openModal(`
       <h2>${isNew ? 'New Action' : 'Edit Action'}</h2>
       <div class="modal-sub">— ${isNew ? 'アクションを追加' : 'アクションを編集'}</div>
-      <div class="field"><label>アクション内容</label><input id="n-title" value="${escapeHtml(n.title)}" placeholder="例: 財務シミュレーション"></div>
+      <div class="field"><label>アクション内容</label><input id="n-title" value="${escapeHtml(n.title)}"></div>
       <div class="field-row">
-        <div class="field"><label>ステータス</label>
-          <select id="n-status">
-            <option value="todo" ${n.status==='todo'?'selected':''}>未着手</option>
-            <option value="doing" ${n.status==='doing'?'selected':''}>進行中</option>
-            <option value="done" ${n.status==='done'?'selected':''}>完了</option>
-            <option value="blocked" ${n.status==='blocked'?'selected':''}>ブロック中</option>
-          </select>
-        </div>
-        <div class="field"><label>優先度</label>
-          <select id="n-priority">
-            <option value="high" ${n.priority==='high'?'selected':''}>HIGH</option>
-            <option value="mid" ${n.priority==='mid'?'selected':''}>MID</option>
-            <option value="low" ${n.priority==='low'?'selected':''}>LOW</option>
-          </select>
-        </div>
+        <div class="field"><label>ステータス</label><select id="n-status">
+          <option value="todo" ${n.status==='todo'?'selected':''}>未着手</option>
+          <option value="doing" ${n.status==='doing'?'selected':''}>進行中</option>
+          <option value="done" ${n.status==='done'?'selected':''}>完了</option>
+          <option value="blocked" ${n.status==='blocked'?'selected':''}>ブロック中</option>
+        </select></div>
+        <div class="field"><label>優先度</label><select id="n-priority">
+          <option value="high" ${n.priority==='high'?'selected':''}>HIGH</option>
+          <option value="mid" ${n.priority==='mid'?'selected':''}>MID</option>
+          <option value="low" ${n.priority==='low'?'selected':''}>LOW</option>
+        </select></div>
       </div>
       <div class="field"><label>期限</label><input type="date" id="n-due" value="${n.due || ''}"></div>
-      <div class="field"><label>メモ</label><textarea id="n-note" placeholder="補足やゴールイメージ">${escapeHtml(n.note || '')}</textarea></div>
+      <div class="field"><label>メモ</label><textarea id="n-note">${escapeHtml(n.note || '')}</textarea></div>
       <div class="modal-actions">
         <span>${!isNew ? `<button class="btn ghost" style="color:var(--red);border-color:var(--red)" data-act="del-node" data-pjid="${pjId}" data-id="${n.id}">削除</button>` : ''}</span>
         <div class="right">
@@ -845,11 +1346,12 @@
   }
   function modalRoutine(routine) {
     const isNew = !routine;
-    const r = routine || { title: '' };
+    const r = routine || { title: '', tagIds: [] };
     openModal(`
       <h2>${isNew ? 'New Routine' : 'Edit Routine'}</h2>
       <div class="modal-sub">— ${STATE.cycle.toUpperCase()} routine</div>
-      <div class="field"><label>ルーティン名</label><input id="r-title" value="${escapeHtml(r.title)}" placeholder="例: 朝のキャッシュ確認"></div>
+      <div class="field"><label>ルーティン名</label><input id="r-title" value="${escapeHtml(r.title)}"></div>
+      <div class="field"><label>タグ</label><div class="tag-selector" id="tag-selector">${renderTagSelectorChips(r.tagIds || [])}</div></div>
       <div class="modal-actions"><span></span><div class="right">
         <button class="btn ghost" data-act="modal-close">キャンセル</button>
         <button class="btn" data-act="${isNew ? 'modal-save-r-new' : 'modal-save-r-edit'}" data-id="${r.id || ''}">${isNew ? '追加' : '保存'}</button>
@@ -858,7 +1360,12 @@
     setTimeout(() => document.getElementById('r-title')?.focus(), 100);
   }
 
-  // ============ Setup screen ============
+  // Get currently selected tag IDs from modal selector
+  function getSelectedTagIds() {
+    return Array.from(document.querySelectorAll('.tag-selector-chip.selected')).map(el => el.dataset.id);
+  }
+
+  // ============ Setup ============
   function showSetup() {
     document.getElementById('setupScreen').style.display = 'block';
     document.getElementById('mainApp').style.display = 'none';
@@ -872,36 +1379,24 @@
     document.getElementById('setupScreen').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
   }
-
   document.getElementById('setupSaveBtn').addEventListener('click', async () => {
     const user = document.getElementById('setupUser').value.trim();
     const repo = document.getElementById('setupRepo').value.trim();
     const token = document.getElementById('setupToken').value.trim();
     const result = document.getElementById('setupTestResult');
     result.className = 'test-result';
-    result.style.display = 'none';
-    if (!user || !repo || !token) {
-      result.className = 'test-result error';
-      result.textContent = '3つすべての項目を入力してください。';
-      return;
-    }
-    result.className = 'test-result';
-    result.style.display = 'block';
-    result.textContent = '接続テスト中...';
+    if (!user || !repo || !token) { result.className = 'test-result error'; result.textContent = '3項目すべて入力してください'; return; }
+    result.className = 'test-result'; result.style.display = 'block'; result.textContent = '接続テスト中...';
     const test = await ghTestConnection(user, repo, token);
-    if (!test.ok) {
-      result.className = 'test-result error';
-      result.textContent = '✕ ' + test.msg;
-      return;
-    }
-    result.className = 'test-result success';
-    result.textContent = '✓ 接続成功。アプリを開始します...';
+    if (!test.ok) { result.className = 'test-result error'; result.textContent = '✕ ' + test.msg; return; }
+    result.className = 'test-result success'; result.textContent = '✓ 接続成功。開始します...';
     setConfig({ user, repo, token });
     setTimeout(async () => {
       showMain();
       await loadData();
       document.getElementById('loadingView').style.display = 'none';
       render();
+      attachDragHandlers();
     }, 600);
   });
 
@@ -911,12 +1406,19 @@
     if (!btn) return;
     STATE.view = btn.dataset.view;
     render();
+    attachDragHandlers();
   });
   document.getElementById('cycleTabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.cycle-tab');
     if (!tab) return;
     STATE.cycle = tab.dataset.cycle;
     render();
+    attachDragHandlers();
+  });
+  document.getElementById('showArchivedCheckbox').addEventListener('change', (e) => {
+    STATE.showArchived = e.target.checked;
+    render();
+    attachDragHandlers();
   });
 
   document.addEventListener('click', async (e) => {
@@ -926,25 +1428,90 @@
 
     if (act === 'modal-close') return closeModal();
 
+    // Filter
+    if (act === 'filter-all') { STATE.activeFilters = []; render(); attachDragHandlers(); return; }
+    if (act === 'filter-tag') {
+      const id = t.dataset.id;
+      const idx = STATE.activeFilters.indexOf(id);
+      if (idx >= 0) STATE.activeFilters.splice(idx, 1);
+      else STATE.activeFilters.push(id);
+      render(); attachDragHandlers(); return;
+    }
+    if (act === 'manage-tags') { modalManageTags(); return; }
+    if (act === 'add-tag') {
+      const input = document.getElementById('newTagName');
+      const name = input.value.trim();
+      if (!name) return;
+      STATE.tags.push({ id: pid(), name, color: getNextColor() });
+      debouncedSave();
+      modalManageTags();
+      return;
+    }
+    if (act === 'cycle-tag-color') {
+      const tag = STATE.tags.find(x => x.id === t.dataset.id);
+      if (tag) {
+        const idx = TAG_COLORS.indexOf(tag.color);
+        tag.color = TAG_COLORS[(idx + 1) % TAG_COLORS.length];
+        debouncedSave();
+        modalManageTags();
+      }
+      return;
+    }
+    if (act === 'del-tag') {
+      const tagId = t.dataset.id;
+      const usage = countItemsWithTag(tagId);
+      if (usage > 0 && !confirm(`このタグは ${usage} 件のアイテムで使用中です。削除すると、それらからタグが外れます。続行しますか?`)) return;
+      // Remove from all items
+      STATE.projects.forEach(p => { p.tagIds = (p.tagIds || []).filter(id => id !== tagId); });
+      ['daily','weekly','monthly'].forEach(cy => {
+        STATE.routines[cy].forEach(r => { r.tagIds = (r.tagIds || []).filter(id => id !== tagId); });
+      });
+      // Remove from filters
+      STATE.activeFilters = STATE.activeFilters.filter(id => id !== tagId);
+      // Remove tag itself
+      STATE.tags = STATE.tags.filter(x => x.id !== tagId);
+      debouncedSave();
+      modalManageTags();
+      // Need to re-render main view too on next close
+      return;
+    }
+    // Tag selector toggle in modals
+    if (act === 'toggle-tag-select') {
+      t.classList.toggle('selected');
+      return;
+    }
+    if (act === 'quick-add-tag') {
+      const name = prompt('新しいタグ名を入力');
+      if (!name || !name.trim()) return;
+      const newTag = { id: pid(), name: name.trim(), color: getNextColor() };
+      STATE.tags.push(newTag);
+      // Re-render the selector with the new tag selected
+      const currentSelected = getSelectedTagIds();
+      currentSelected.push(newTag.id);
+      const selector = document.getElementById('tag-selector');
+      if (selector) selector.innerHTML = renderTagSelectorChips(currentSelected);
+      debouncedSave();
+      return;
+    }
+
     if (act === 'save-config') {
       const user = document.getElementById('cfg-user').value.trim();
       const repo = document.getElementById('cfg-repo').value.trim();
       const tokenInput = document.getElementById('cfg-token').value.trim();
       const cur = getConfig() || {};
       const token = tokenInput || cur.token;
-      if (!user || !repo || !token) { alert('すべての項目が必要です'); return; }
+      if (!user || !repo || !token) { alert('すべて必要'); return; }
       const test = await ghTestConnection(user, repo, token);
-      if (!test.ok) { alert('接続テスト失敗: ' + test.msg); return; }
+      if (!test.ok) { alert('テスト失敗: ' + test.msg); return; }
       setConfig({ user, repo, token });
       closeModal();
-      // Reload data with new config
       STATE.sha = null;
       await loadData();
-      render();
+      render(); attachDragHandlers();
       return;
     }
     if (act === 'reset-config') {
-      if (confirm('設定を削除すると、初期画面に戻ります。データはGitHubに残ります。\n本当に削除しますか?')) {
+      if (confirm('設定を削除しますか? データはGitHubに残ります。')) {
         localStorage.removeItem(CONFIG_KEY);
         localStorage.removeItem(CACHE_KEY);
         location.reload();
@@ -952,16 +1519,20 @@
       return;
     }
 
+    // Project ops
     if (act === 'modal-save-pj') {
       const title = document.getElementById('m-title').value.trim();
       if (!title) return;
-      STATE.projects.push({ id: pid(), title, nodes: [] });
-      closeModal(); render(); debouncedSave(); return;
+      STATE.projects.push({ id: pid(), title, tagIds: getSelectedTagIds(), archived: false, nodes: [] });
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'modal-save-pj-edit') {
       const p = STATE.projects.find(x => x.id === t.dataset.id);
-      if (p) p.title = document.getElementById('m-title').value.trim() || p.title;
-      closeModal(); render(); debouncedSave(); return;
+      if (p) {
+        p.title = document.getElementById('m-title').value.trim() || p.title;
+        p.tagIds = getSelectedTagIds();
+      }
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'edit-pj') {
       e.stopPropagation();
@@ -969,15 +1540,25 @@
       if (p) modalEditProject(p);
       return;
     }
+    if (act === 'toggle-archive-pj') {
+      e.stopPropagation();
+      const p = STATE.projects.find(x => x.id === t.dataset.id);
+      if (p) {
+        p.archived = !p.archived;
+        render(); attachDragHandlers(); debouncedSave();
+      }
+      return;
+    }
     if (act === 'del-pj') {
       e.stopPropagation();
-      if (confirm('このプロジェクトを削除しますか?')) {
+      if (confirm('このプロジェクトを完全に削除しますか?\n(アーカイブではなく完全削除)')) {
         STATE.projects = STATE.projects.filter(x => x.id !== t.dataset.id);
-        render(); debouncedSave();
+        render(); attachDragHandlers(); debouncedSave();
       }
       return;
     }
 
+    // Node ops
     if (act === 'cycle-status') {
       e.stopPropagation();
       const p = STATE.projects.find(x => x.id === t.dataset.pjid);
@@ -985,7 +1566,7 @@
       if (n) {
         const order = ['todo', 'doing', 'done', 'blocked'];
         n.status = order[(order.indexOf(n.status) + 1) % order.length];
-        render(); debouncedSave();
+        render(); attachDragHandlers(); debouncedSave();
       }
       return;
     }
@@ -1008,7 +1589,7 @@
         due: document.getElementById('n-due').value,
         note: document.getElementById('n-note').value.trim()
       });
-      closeModal(); render(); debouncedSave(); return;
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'modal-save-node-edit') {
       const p = STATE.projects.find(x => x.id === t.dataset.pjid);
@@ -1019,19 +1600,20 @@
       n.priority = document.getElementById('n-priority').value;
       n.due = document.getElementById('n-due').value;
       n.note = document.getElementById('n-note').value.trim();
-      closeModal(); render(); debouncedSave(); return;
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'del-node') {
       const p = STATE.projects.find(x => x.id === t.dataset.pjid);
       if (p) p.nodes = p.nodes.filter(n => n.id !== t.dataset.id);
-      closeModal(); render(); debouncedSave(); return;
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
 
+    // Routine ops
     if (act === 'toggle-r') {
       e.stopPropagation();
       const r = STATE.routines[STATE.cycle].find(x => x.id === t.dataset.id);
       if (r) r.done = !r.done;
-      render(); debouncedSave(); return;
+      render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'edit-r') {
       e.stopPropagation();
@@ -1043,25 +1625,44 @@
       e.stopPropagation();
       if (confirm('このルーティンを削除しますか?')) {
         STATE.routines[STATE.cycle] = STATE.routines[STATE.cycle].filter(x => x.id !== t.dataset.id);
-        render(); debouncedSave();
+        render(); attachDragHandlers(); debouncedSave();
       }
       return;
     }
     if (act === 'modal-save-r-new') {
       const title = document.getElementById('r-title').value.trim();
       if (!title) return;
-      STATE.routines[STATE.cycle].push({ id: pid(), title, done: false, streak: 0 });
-      closeModal(); render(); debouncedSave(); return;
+      STATE.routines[STATE.cycle].push({ id: pid(), title, done: false, streak: 0, tagIds: getSelectedTagIds() });
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'modal-save-r-edit') {
       const r = STATE.routines[STATE.cycle].find(x => x.id === t.dataset.id);
-      if (r) r.title = document.getElementById('r-title').value.trim() || r.title;
-      closeModal(); render(); debouncedSave(); return;
+      if (r) {
+        r.title = document.getElementById('r-title').value.trim() || r.title;
+        r.tagIds = getSelectedTagIds();
+      }
+      closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
+    }
+  });
+
+  // Tag rename via input change in manage modal
+  document.addEventListener('change', (e) => {
+    const t = e.target.closest('[data-act="rename-tag"]');
+    if (!t) return;
+    const tag = STATE.tags.find(x => x.id === t.dataset.id);
+    if (tag) {
+      const newName = t.value.trim();
+      if (newName) { tag.name = newName; debouncedSave(); }
     }
   });
 
   document.getElementById('modalBg').addEventListener('click', (e) => {
-    if (e.target.id === 'modalBg') closeModal();
+    if (e.target.id === 'modalBg') {
+      closeModal();
+      // After tag manage modal closes, re-render in case tags changed
+      render();
+      attachDragHandlers();
+    }
   });
   document.getElementById('addBtn').addEventListener('click', () => {
     if (STATE.view === 'projects') modalNewProject();
@@ -1072,7 +1673,7 @@
   document.getElementById('settingsBtn').addEventListener('click', modalSettings);
   document.getElementById('reloadBtn').addEventListener('click', async () => {
     if (STATE.pendingSave) {
-      if (!confirm('未保存の変更があります。破棄して再読込しますか?')) return;
+      if (!confirm('未保存の変更があります。破棄しますか?')) return;
     }
     document.getElementById('loadingView').style.display = 'block';
     document.getElementById('projectsView').classList.remove('active');
@@ -1080,30 +1681,22 @@
     STATE.sha = null;
     await loadData();
     document.getElementById('loadingView').style.display = 'none';
-    render();
+    render(); attachDragHandlers();
   });
 
-  // Save before leaving
   window.addEventListener('beforeunload', (e) => {
-    if (STATE.pendingSave) {
-      // Trigger immediate save
-      saveDataNow();
-      e.preventDefault();
-      e.returnValue = '';
-    }
+    if (STATE.pendingSave) { saveDataNow(); e.preventDefault(); e.returnValue = ''; }
   });
 
   // ============ Init ============
   (async () => {
     const cfg = getConfig();
-    if (!cfg) {
-      showSetup();
-      return;
-    }
+    if (!cfg) { showSetup(); return; }
     showMain();
     await loadData();
     document.getElementById('loadingView').style.display = 'none';
     render();
+    attachDragHandlers();
   })();
 </script>
 </body>
