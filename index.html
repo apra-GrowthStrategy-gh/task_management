@@ -377,6 +377,7 @@
   .btn:hover, .btn:active { background: var(--accent); }
   .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
   .btn.ghost:hover, .btn.ghost:active { background: var(--bg-card); border-color: var(--ink); }
+  .btn.btn-sm { padding: 6px 14px; font-size: 12px; min-height: 32px; }
 
   .archive-toggle {
     display: flex;
@@ -753,7 +754,8 @@
     .toolbar-left { font-size: 19px; }
     .toolbar-left .desc { display: block; margin-left: 0; margin-top: 4px; }
     .toolbar-right { width: 100%; gap: 8px; }
-    .toolbar-right .btn { flex: 1; }
+    .toolbar-right .btn { flex: 0 0 auto; }
+    .toolbar-right { justify-content: flex-end; }
     .project-head { padding: 14px; flex-wrap: wrap; }
     .project-head-main { width: 100%; min-width: 0; }
     .project-head h3 { font-size: 17px; }
@@ -803,6 +805,7 @@
         <div id="metaSummary">loading...</div>
       </div>
       <div class="sync-indicator idle" id="syncIndicator">SYNCED</div>
+      <button class="icon-circle-btn" id="reloadBtn" title="再読込">↻</button>
       <button class="icon-circle-btn" id="settingsBtn" title="設定">⚙</button>
       <button class="icon-circle-btn" id="helpBtn" title="使い方">i</button>
     </div>
@@ -826,8 +829,7 @@
     <div class="toolbar">
       <div class="toolbar-left" id="viewTitle">Summary<span class="desc">— 全体の俯瞰</span></div>
       <div class="toolbar-right">
-        <button class="btn ghost" id="reloadBtn">↻ 再読込</button>
-        <button class="btn" id="addBtn" style="display:none">+ Add</button>
+        <button class="btn btn-sm" id="addBtn" style="display:none">+ Add</button>
       </div>
     </div>
   </div>
