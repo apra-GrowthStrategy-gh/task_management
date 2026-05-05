@@ -121,20 +121,14 @@
   }
   .tag-chip.manage-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-  /* Dashboard: project highlights list */
+  /* Dashboard: project highlights list (Summary view only) */
+  .summary-view { display: none; }
+  .summary-view.active { display: block; }
   .dashboard {
     background: var(--bg-card);
     border: 1px solid var(--line);
     margin-bottom: 24px;
     overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, border 0.3s ease;
-    max-height: 1200px;
-  }
-  body.scrolled .dashboard {
-    max-height: 0;
-    margin-bottom: 0;
-    border-width: 0;
-    opacity: 0;
   }
   .dashboard-header {
     display: flex;
@@ -241,12 +235,98 @@
   }
 
   /* Highlight target on jump */
+  .project-card {
+    scroll-margin-top: 220px;
+  }
+  body.scrolled .project-card {
+    scroll-margin-top: 130px;
+  }
   .project-card.highlight-jumped {
     animation: highlightFlash 1.5s ease;
   }
   @keyframes highlightFlash {
     0%, 100% { box-shadow: none; }
     30% { box-shadow: 0 0 0 3px var(--accent); }
+  }
+
+  /* Bottleneck grid (per-tag dashboard for Projects/Routines pages) */
+  .bottleneck-grid {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bottleneck-table {
+    width: 100%;
+    min-width: 540px;
+    border-collapse: collapse;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .bottleneck-table thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 10px 12px;
+    text-align: center;
+    background: linear-gradient(to bottom, rgba(184,70,42,0.04), transparent);
+    border-bottom: 1px solid var(--line-soft);
+    font-weight: 500;
+  }
+  .bottleneck-table thead th.tag-col {
+    text-align: left;
+    padding-left: 18px;
+  }
+  .bottleneck-table tbody td {
+    padding: 12px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--line-soft);
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .bottleneck-table tbody tr:last-child td { border-bottom: none; }
+  .bottleneck-table tbody td.tag-col {
+    text-align: left;
+    padding-left: 18px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+  }
+  .bottleneck-table tbody td.tag-col .tag-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .bottleneck-table tbody td.zero {
+    color: var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .bottleneck-table tbody td.alert {
+    color: var(--red);
+    background: rgba(168,64,48,0.05);
+  }
+  .bottleneck-table tbody td.warn {
+    color: #8a6820;
+  }
+  .bottleneck-table tbody tr.totals-row td {
+    border-top: 2px solid var(--ink);
+    background: var(--line-soft);
+    font-weight: 600;
+    font-size: 17px;
+  }
+  .bottleneck-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 13px;
   }
   /* Sticky header on scroll */
   .sticky-bar {
@@ -728,14 +808,12 @@
     </div>
   </header>
 
-  <!-- Dashboard: project highlights (collapses on scroll) -->
-  <div class="dashboard" id="dashboard"></div>
-
   <!-- Sticky bar: tabs + filter + toolbar always visible -->
   <div class="sticky-bar">
     <nav class="switcher" id="switcher">
-      <button class="switch-btn active" data-view="projects"><span class="num">01</span>Projects</button>
-      <button class="switch-btn" data-view="routines"><span class="num">02</span>Routines</button>
+      <button class="switch-btn active" data-view="summary"><span class="num">01</span>Summary</button>
+      <button class="switch-btn" data-view="projects"><span class="num">02</span>Projects</button>
+      <button class="switch-btn" data-view="routines"><span class="num">03</span>Routines</button>
     </nav>
 
     <div class="filter-row" id="filterRow"></div>
@@ -746,17 +824,23 @@
     </div>
 
     <div class="toolbar">
-      <div class="toolbar-left" id="viewTitle">Project Roadmaps<span class="desc">— 始まりと終わりのある仕事</span></div>
+      <div class="toolbar-left" id="viewTitle">Summary<span class="desc">— 全体の俯瞰</span></div>
       <div class="toolbar-right">
         <button class="btn ghost" id="reloadBtn">↻ 再読込</button>
-        <button class="btn" id="addBtn">+ Add</button>
+        <button class="btn" id="addBtn" style="display:none">+ Add</button>
       </div>
     </div>
   </div>
 
   <div class="loading" id="loadingView">LOADING FROM GITHUB...</div>
 
+  <!-- Summary view: project highlights -->
+  <section class="summary-view" id="summaryView">
+    <div class="dashboard" id="dashboard"></div>
+  </section>
+
   <section class="roadmap" id="projectsView">
+    <div class="bottleneck-grid" id="projectsBottleneck"></div>
     <label class="archive-toggle" id="archiveToggleLabel">
       <input type="checkbox" id="showArchivedCheckbox">
       <span>アーカイブ済みも表示</span>
@@ -767,6 +851,7 @@
   </section>
 
   <section class="routines" id="routinesView">
+    <div class="bottleneck-grid" id="routinesBottleneck"></div>
     <div class="cycle-tabs" id="cycleTabs">
       <button class="cycle-tab active" data-cycle="daily">DAILY</button>
       <button class="cycle-tab" data-cycle="weekly">WEEKLY</button>
@@ -786,7 +871,7 @@
 
 <script>
   const STATE = {
-    view: 'projects',
+    view: 'summary',
     cycle: 'daily',
     weeklyMode: 'all', // 'all' (default) or 'today'
     focusFilter: null, // null | 'today-focus' | 'awaiting'
@@ -1104,19 +1189,28 @@
 
   // ============ Render ============
   function render() {
-    renderHeader(); renderFilters(); renderStats(); renderFocusBanner(); renderToolbar(); renderArchiveToggle();
-    if (STATE.view === 'projects') {
-      document.getElementById('projectsView').classList.add('active');
-      document.getElementById('routinesView').classList.remove('active');
+    renderHeader(); renderFilters(); renderFocusBanner(); renderToolbar(); renderArchiveToggle();
+    const summaryEl = document.getElementById('summaryView');
+    const projectsEl = document.getElementById('projectsView');
+    const routinesEl = document.getElementById('routinesView');
+    summaryEl.classList.toggle('active', STATE.view === 'summary');
+    projectsEl.classList.toggle('active', STATE.view === 'projects');
+    routinesEl.classList.toggle('active', STATE.view === 'routines');
+    if (STATE.view === 'summary') {
+      renderSummary();
+    } else if (STATE.view === 'projects') {
+      renderProjectsBottleneck();
       renderProjects();
     } else {
-      document.getElementById('projectsView').classList.remove('active');
-      document.getElementById('routinesView').classList.add('active');
+      renderRoutinesBottleneck();
       renderRoutines();
     }
     document.querySelectorAll('.switch-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.view === STATE.view);
     });
+    // Toggle Add button visibility (Summary has no Add)
+    const addBtn = document.getElementById('addBtn');
+    if (addBtn) addBtn.style.display = STATE.view === 'summary' ? 'none' : '';
   }
   function renderHeader() {
     const now = new Date();
@@ -1175,7 +1269,7 @@
     document.getElementById('archiveToggleLabel').style.display = STATE.view === 'projects' ? 'flex' : 'none';
     document.getElementById('showArchivedCheckbox').checked = STATE.showArchived;
   }
-  function renderStats() {
+  function renderSummary() {
     const root = document.getElementById('dashboard');
     const today = new Date().toISOString().slice(0, 10);
     const todayDow = new Date().getDay();
@@ -1263,8 +1357,176 @@
   }
   function renderToolbar() {
     const t = document.getElementById('viewTitle');
-    if (STATE.view === 'projects') t.innerHTML = `Project Roadmaps <span class="desc">— 始まりと終わりのある仕事</span>`;
+    if (STATE.view === 'summary') t.innerHTML = `Summary <span class="desc">— 全体の俯瞰</span>`;
+    else if (STATE.view === 'projects') t.innerHTML = `Project Roadmaps <span class="desc">— 始まりと終わりのある仕事</span>`;
     else t.innerHTML = `Routines <span class="desc">— 繰り返し回す仕事</span>`;
+  }
+
+  // ============ Bottleneck grids ============
+  function renderProjectsBottleneck() {
+    const root = document.getElementById('projectsBottleneck');
+    const today = new Date().toISOString().slice(0, 10);
+    // Group active project nodes by tag
+    const activeProjects = STATE.projects.filter(p => !p.archived);
+    const tagBuckets = {}; // tagId -> {doing, depend, approve, overdue, total}
+    const noTag = { doing: 0, depend: 0, approve: 0, overdue: 0, total: 0 };
+    STATE.tags.forEach(t => {
+      tagBuckets[t.id] = { doing: 0, depend: 0, approve: 0, overdue: 0, total: 0 };
+    });
+
+    activeProjects.forEach(p => {
+      const targets = (p.tagIds && p.tagIds.length > 0) ? p.tagIds : ['__none__'];
+      p.nodes.forEach(n => {
+        const isOverdue = n.due && n.status !== 'done' && n.status !== 'stay' && new Date(n.due) < new Date(today);
+        targets.forEach(tid => {
+          const bucket = tid === '__none__' ? noTag : tagBuckets[tid];
+          if (!bucket) return;
+          bucket.total++;
+          if (n.status === 'doing') bucket.doing++;
+          else if (n.status === 'depend') bucket.depend++;
+          else if (n.status === 'approve') bucket.approve++;
+          if (isOverdue) bucket.overdue++;
+        });
+      });
+    });
+
+    // Build rows: only tags that have at least one node
+    const rows = [];
+    STATE.tags.forEach(t => {
+      const b = tagBuckets[t.id];
+      if (b.total > 0) rows.push({ tag: t, ...b });
+    });
+    if (noTag.total > 0) {
+      rows.push({ tag: { name: '未分類', color: '#bbb' }, ...noTag });
+    }
+    // Totals
+    const totals = rows.reduce((acc, r) => {
+      acc.doing += r.doing; acc.depend += r.depend; acc.approve += r.approve; acc.overdue += r.overdue; acc.total += r.total;
+      return acc;
+    }, { doing: 0, depend: 0, approve: 0, overdue: 0, total: 0 });
+
+    if (rows.length === 0) {
+      root.innerHTML = `<div class="bottleneck-empty">アクティブなアクションがありません</div>`;
+      return;
+    }
+
+    const cell = (n, cls) => n === 0 ? `<td class="zero">—</td>` : `<td class="${cls || ''}">${n}</td>`;
+
+    root.innerHTML = `
+      <table class="bottleneck-table">
+        <thead>
+          <tr>
+            <th class="tag-col">タグ</th>
+            <th>進行中</th>
+            <th>依頼中</th>
+            <th>決裁待ち</th>
+            <th>期限超過</th>
+            <th>合計</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td class="tag-col"><span class="tag-dot" style="background:${r.tag.color}"></span>${escapeHtml(r.tag.name)}</td>
+              ${cell(r.doing)}
+              ${cell(r.depend, 'warn')}
+              ${cell(r.approve, 'warn')}
+              ${cell(r.overdue, r.overdue > 0 ? 'alert' : '')}
+              <td>${r.total}</td>
+            </tr>
+          `).join('')}
+          <tr class="totals-row">
+            <td class="tag-col">合計</td>
+            <td>${totals.doing || '—'}</td>
+            <td>${totals.depend || '—'}</td>
+            <td>${totals.approve || '—'}</td>
+            <td class="${totals.overdue > 0 ? 'alert' : ''}">${totals.overdue || '—'}</td>
+            <td>${totals.total}</td>
+          </tr>
+        </tbody>
+      </table>`;
+  }
+
+  function renderRoutinesBottleneck() {
+    const root = document.getElementById('routinesBottleneck');
+    const todayDow = new Date().getDay();
+    // For routines: count by tag × cycle, and "today's not done"
+    const tagBuckets = {};
+    const noTag = { daily_pending: 0, weekly_pending: 0, monthly_pending: 0, total: 0 };
+    STATE.tags.forEach(t => {
+      tagBuckets[t.id] = { daily_pending: 0, weekly_pending: 0, monthly_pending: 0, total: 0 };
+    });
+
+    const countCycle = (cycle, key) => {
+      STATE.routines[cycle].forEach(r => {
+        const targets = (r.tagIds && r.tagIds.length > 0) ? r.tagIds : ['__none__'];
+        // For weekly: only count if today matches
+        if (cycle === 'weekly') {
+          if (r.dayOfWeek && r.dayOfWeek.length > 0 && !r.dayOfWeek.includes(todayDow)) return;
+        }
+        const isPending = !r.done;
+        targets.forEach(tid => {
+          const bucket = tid === '__none__' ? noTag : tagBuckets[tid];
+          if (!bucket) return;
+          bucket.total++;
+          if (isPending) bucket[key]++;
+        });
+      });
+    };
+    countCycle('daily', 'daily_pending');
+    countCycle('weekly', 'weekly_pending');
+    countCycle('monthly', 'monthly_pending');
+
+    const rows = [];
+    STATE.tags.forEach(t => {
+      const b = tagBuckets[t.id];
+      if (b.total > 0) rows.push({ tag: t, ...b });
+    });
+    if (noTag.total > 0) {
+      rows.push({ tag: { name: '未分類', color: '#bbb' }, ...noTag });
+    }
+    const totals = rows.reduce((acc, r) => {
+      acc.daily_pending += r.daily_pending; acc.weekly_pending += r.weekly_pending; acc.monthly_pending += r.monthly_pending; acc.total += r.total;
+      return acc;
+    }, { daily_pending: 0, weekly_pending: 0, monthly_pending: 0, total: 0 });
+
+    if (rows.length === 0) {
+      root.innerHTML = `<div class="bottleneck-empty">ルーティンがありません</div>`;
+      return;
+    }
+
+    const cell = (n, cls) => n === 0 ? `<td class="zero">—</td>` : `<td class="${cls || ''}">${n}</td>`;
+
+    root.innerHTML = `
+      <table class="bottleneck-table">
+        <thead>
+          <tr>
+            <th class="tag-col">タグ</th>
+            <th>DAILY 未</th>
+            <th>WEEKLY 今日 未</th>
+            <th>MONTHLY 未</th>
+            <th>合計</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td class="tag-col"><span class="tag-dot" style="background:${r.tag.color}"></span>${escapeHtml(r.tag.name)}</td>
+              ${cell(r.daily_pending, r.daily_pending > 0 ? 'warn' : '')}
+              ${cell(r.weekly_pending, r.weekly_pending > 0 ? 'warn' : '')}
+              ${cell(r.monthly_pending, r.monthly_pending > 0 ? 'warn' : '')}
+              <td>${r.total}</td>
+            </tr>
+          `).join('')}
+          <tr class="totals-row">
+            <td class="tag-col">合計</td>
+            <td>${totals.daily_pending || '—'}</td>
+            <td>${totals.weekly_pending || '—'}</td>
+            <td>${totals.monthly_pending || '—'}</td>
+            <td>${totals.total}</td>
+          </tr>
+        </tbody>
+      </table>`;
   }
   function renderProjects() {
     const list = document.getElementById('projectList');
@@ -1700,9 +1962,10 @@
       <h2>使い方</h2>
       <div class="modal-sub">— Task Roadmap</div>
       <div class="help-section">
-        <h3>2つのモード</h3>
-        <div class="help-rule"><span class="key">Projects</span><span class="val"><strong>始まりと終わりがある仕事</strong>。完了したらアーカイブ可。</span></div>
-        <div class="help-rule"><span class="key">Routines</span><span class="val"><strong>繰り返し回す仕事</strong>。日次/週次/月次サイクル。</span></div>
+        <h3>3画面構成</h3>
+        <div class="help-rule"><span class="key">Summary</span><span class="val"><strong>全体俯瞰</strong>。アクティブなプロジェクト一覧+進捗バー。各行をタップで該当プロジェクトへジャンプ。</span></div>
+        <div class="help-rule"><span class="key">Projects</span><span class="val"><strong>始まりと終わりがある仕事</strong>。タグ×ステータスのボトルネック・グリッドつき。</span></div>
+        <div class="help-rule"><span class="key">Routines</span><span class="val"><strong>繰り返し回す仕事</strong>(日次/週次/月次)。タグ別の未完了グリッドつき。</span></div>
       </div>
       <div class="help-section">
         <h3>WEEKLY ルーティンの曜日指定</h3>
@@ -1729,12 +1992,10 @@
         <div class="help-rule"><span class="key">表示切替</span><span class="val">「アーカイブ済みも表示」でアーカイブ済みも一覧に表示。</span></div>
       </div>
       <div class="help-section">
-        <h3>ダッシュボード</h3>
-        <div class="help-rule"><span class="key">プロジェクト一覧</span><span class="val">アクティブな全プロジェクトを<strong>1行ずつ</strong>表示。プロジェクト名・進捗バー・完了率・ノード数(完了/全体)が横並びで一望できます。</span></div>
-        <div class="help-rule"><span class="key">タップでジャンプ</span><span class="val">一覧の各行をタップすると、そのプロジェクトカードまで<strong>スクロールジャンプ</strong>。一瞬光って強調されます。</span></div>
-        <div class="help-rule"><span class="key">ヘッダー</span><span class="val">最上段に集計値:PJ数 / DOING(進行中)/ AWAIT(他者待ち)/ OVERDUE(期限超過、ある時だけ赤く表示)/ RTN TODAY(今日のルーティン進捗)。</span></div>
-        <div class="help-rule"><span class="key">⚠ マーク</span><span class="val">プロジェクト名の左に⚠が付いていれば、そのプロジェクトに<strong>期限超過のアクション</strong>が含まれています。</span></div>
-        <div class="help-rule"><span class="key">スクロール時</span><span class="val">スクロールするとダッシュボードは<strong>自動で折りたたまれ</strong>、タブとフィルタが上部に張り付きます。</span></div>
+        <h3>ボトルネック・グリッド(Projects/Routines)</h3>
+        <div class="help-rule"><span class="key">タグ × ステータス</span><span class="val">どのタグのタスクで「進行中」「依頼中」「決裁待ち」「期限超過」が溜まっているか、<strong>一望して分かる</strong>。</span></div>
+        <div class="help-rule"><span class="key">⚠ 赤セル</span><span class="val">期限超過があるセルは赤く塗られます。要対応のサイン。</span></div>
+        <div class="help-rule"><span class="key">合計行</span><span class="val">下段の太線で全体集計。タグ横断で見たいときに。</span></div>
       </div>
       <div class="help-section">
         <h3>ステータス操作</h3>
