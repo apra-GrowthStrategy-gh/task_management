@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f1e8">
+<title>Task Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1e8;
+    --bg-card: #fefcf7;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-mute: #888;
+    --line: #d8d2c4;
+    --line-soft: #ebe6d8;
+    --accent: #b8462a;
+    --accent-soft: #e8d0c4;
+    --gold: #a88a4a;
+    --green: #4a7a4a;
+    --green-soft: #d4e0d0;
+    --amber: #c89a3a;
+    --amber-soft: #f0e2c0;
+    --red: #a84030;
+    --red-soft: #f0d4d0;
+    --shadow-lift: 0 2px 4px rgba(0,0,0,0.06), 0 12px 28px rgba(0,0,0,0.08);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Noto Sans JP', 'Fraunces', serif;
+    background: var(--bg);
+    color: var(--ink);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(184,70,42,0.04), transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(168,138,74,0.05), transparent 50%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+  .app { max-width: 1400px; margin: 0 auto; padding: 24px 28px calc(80px + var(--safe-bottom)); }
+  .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 24px; gap: 16px; }
+  .brand .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 4px; }
+  .brand h1 { font-family: 'Fraunces', serif; font-size: 38px; letter-spacing: -0.02em; font-weight: 500; line-height: 1; }
+  .brand h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); text-align: right; line-height: 1.6; }
+  .icon-circle-btn { width: 36px; height: 36px; border: 1px solid var(--line); background: var(--bg-card); cursor: pointer; font-family: 'Fraunces', serif; font-style: italic; font-size: 16px; color: var(--ink-soft); transition: all 0.2s ease; border-radius: 50%; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+  .icon-circle-btn:hover, .icon-circle-btn:active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .sync-indicator { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 4px 9px; border-radius: 100px; letter-spacing: 0.08em; text-transform: uppercase; transition: all 0.3s ease; white-space: nowrap; }
+  .sync-indicator.idle { background: var(--green-soft); color: var(--green); }
+  .sync-indicator.syncing { background: var(--amber-soft); color: #8a6820; }
+  .sync-indicator.error { background: var(--red-soft); color: var(--red); }
+  .sync-indicator.offline { background: var(--line-soft); color: var(--ink-mute); }
+
+  .switcher { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+  .switch-btn { padding: 14px 24px 16px; background: transparent; border: none; border-bottom: 2px solid transparent; font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink-mute); cursor: pointer; transition: all 0.25s ease; margin-bottom: -1px; }
+  .switch-btn .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); margin-right: 8px; vertical-align: 2px; }
+  .switch-btn.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .switch-btn.active .num { color: var(--accent); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 28px; }
+  .stat { background: var(--bg-card); padding: 16px 18px; }
+  .stat .label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; line-height: 1.3; }
+  .stat .value { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; line-height: 1; }
+  .stat .value .unit { font-size: 12px; color: var(--ink-mute); margin-left: 4px; font-weight: 400; }
+  .stat .bar { height: 3px; background: var(--line-soft); margin-top: 10px; border-radius: 2px; overflow: hidden; }
+  .stat .bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .toolbar-left { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; }
+  .toolbar-left .desc { font-family: 'Noto Sans JP', sans-serif; font-size: 12px; color: var(--ink-mute); margin-left: 10px; font-weight: 400; }
+  .toolbar-right { display: flex; gap: 8px; }
+  .btn { padding: 10px 18px; background: var(--ink); color: var(--bg); border: none; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; min-height: 40px; }
+  .btn:hover, .btn:active { background: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.ghost:hover, .btn.ghost:active { background: var(--bg-card); border-color: var(--ink); }
+
+  .roadmap { display: none; }
+  .roadmap.active { display: block; }
+  .project-card { background: var(--bg-card); border: 1px solid var(--line); margin-bottom: 20px; overflow: hidden; }
+  .project-head { padding: 18px 22px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to right, rgba(184,70,42,0.02), transparent); gap: 12px; }
+  .project-head h3 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.35; flex: 1; min-width: 0; word-break: break-word; }
+  .project-head .pj-meta { display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); flex-shrink: 0; }
+  .progress-circle { width: 36px; height: 36px; position: relative; flex-shrink: 0; }
+  .progress-circle svg { transform: rotate(-90deg); }
+  .progress-circle .pc-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; }
+  .pj-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 32px; height: 32px; background: transparent; border: 1px solid var(--line); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink-mute); transition: all 0.2s ease; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+  .icon-btn:hover, .icon-btn:active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .icon-btn.danger:hover, .icon-btn.danger:active { background: var(--red); border-color: var(--red); }
+
+  .nodes { padding: 22px 18px 24px; position: relative; }
+  .node-row { display: grid; grid-template-columns: 32px 1fr; gap: 14px; position: relative; padding-bottom: 10px; }
+  .node-row::before { content: ''; position: absolute; left: 15px; top: 32px; bottom: -2px; width: 1px; background: var(--line); }
+  .node-row:last-of-type::before { display: none; }
+  .node-marker { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--line); background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink-mute); z-index: 1; flex-shrink: 0; cursor: pointer; transition: all 0.2s ease; user-select: none; }
+  .node-marker:active { transform: scale(0.92); }
+  .node-row[data-status="done"] .node-marker { background: var(--green); border-color: var(--green); color: white; }
+  .node-row[data-status="doing"] .node-marker { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 0 4px var(--accent-soft); }
+  .node-row[data-status="blocked"] .node-marker { background: var(--red); border-color: var(--red); color: white; }
+  .node-body { padding: 6px 0 10px; cursor: pointer; min-width: 0; }
+  .node-title { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.5; margin-bottom: 5px; word-break: break-word; }
+  .node-row[data-status="done"] .node-title { text-decoration: line-through; color: var(--ink-mute); }
+  .node-meta { display: flex; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); align-items: center; flex-wrap: wrap; }
+  .pill { padding: 2px 8px; border: 1px solid var(--line); border-radius: 100px; font-size: 10px; letter-spacing: 0.05em; }
+  .pill.priority-high { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .pill.priority-mid { background: var(--amber-soft); border-color: var(--amber); color: #8a6820; }
+  .pill.priority-low { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .pill.due-overdue { background: var(--red-soft); border-color: var(--red); color: var(--red); font-weight: 600; }
+  .pill.due-soon { background: var(--amber-soft); border-color: var(--amber); color: #8a6820; }
+  .node-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; padding: 8px 10px; background: var(--line-soft); border-left: 2px solid var(--gold); line-height: 1.6; word-break: break-word; }
+
+  .add-node-row { display: grid; grid-template-columns: 32px 1fr; gap: 14px; margin-top: 4px; }
+  .add-node-btn { background: transparent; border: 1px dashed var(--line); padding: 10px 14px; text-align: left; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--ink-mute); transition: all 0.2s ease; min-height: 40px; }
+  .add-node-btn:hover, .add-node-btn:active { border-color: var(--accent); color: var(--accent); }
+  .add-project-btn { width: 100%; padding: 18px; background: transparent; border: 1px dashed var(--line); cursor: pointer; font-family: 'Fraunces', serif; font-size: 15px; color: var(--ink-mute); transition: all 0.2s ease; margin-top: 12px; }
+  .add-project-btn:hover, .add-project-btn:active { border-color: var(--accent); color: var(--accent); }
+
+  .routines { display: none; }
+  .routines.active { display: block; }
+  .cycle-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+  .cycle-tab { padding: 10px 22px; background: var(--bg-card); border: 1px solid var(--line); cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); min-height: 40px; flex-shrink: 0; }
+  .cycle-tab.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .routine-list { background: var(--bg-card); border: 1px solid var(--line); }
+  .routine-item { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line-soft); }
+  .routine-item:last-child { border-bottom: none; }
+  .check { width: 26px; height: 26px; border: 1.5px solid var(--line); background: var(--bg-card); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; color: transparent; font-size: 14px; user-select: none; }
+  .check:active { transform: scale(0.92); }
+  .routine-item.done .check { background: var(--green); border-color: var(--green); color: white; }
+  .routine-item.done .r-title { text-decoration: line-through; color: var(--ink-mute); }
+  .r-title { font-size: 14px; font-weight: 500; word-break: break-word; cursor: pointer; }
+  .r-streak { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); padding: 3px 8px; background: rgba(168,138,74,0.1); border-radius: 100px; flex-shrink: 0; white-space: nowrap; }
+  .r-actions { display: flex; gap: 4px; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; backdrop-filter: blur(4px); }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--bg-card); width: 100%; max-width: 540px; padding: 28px; border: 1px solid var(--line); box-shadow: var(--shadow-lift); max-height: 92vh; overflow-y: auto; }
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .modal .modal-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 22px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--line); background: var(--bg); font-family: 'Noto Sans JP', sans-serif; font-size: 16px; color: var(--ink); transition: border-color 0.2s ease; border-radius: 0; -webkit-appearance: none; appearance: none; }
+  .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 70px; font-family: 'Noto Sans JP', sans-serif; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field .help-text { font-size: 11px; color: var(--ink-mute); margin-top: 5px; line-height: 1.5; }
+  .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-soft); gap: 8px; }
+  .modal-actions .right { display: flex; gap: 8px; }
+
+  .help-section { margin-bottom: 22px; }
+  .help-section h3 { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line-soft); }
+  .help-rule { display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 8px 0; font-size: 13px; line-height: 1.6; }
+  .help-rule .key { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--line-soft); padding: 3px 8px; border-radius: 4px; white-space: nowrap; align-self: start; margin-top: 1px; }
+  .help-rule .val { color: var(--ink-soft); }
+  .help-rule .val strong { color: var(--ink); font-weight: 600; }
+  .status-legend { display: grid; gap: 8px; margin-top: 8px; }
+  .legend-row { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: center; font-size: 13px; color: var(--ink-soft); }
+  .legend-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; }
+  .legend-dot.todo { background: var(--bg-card); border: 2px solid var(--line); color: var(--ink-mute); }
+  .legend-dot.doing { background: var(--accent); color: white; }
+  .legend-dot.done { background: var(--green); color: white; }
+  .legend-dot.blocked { background: var(--red); color: white; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--ink-mute); }
+  .empty .empty-art { font-family: 'Fraunces', serif; font-style: italic; font-size: 30px; color: var(--line); margin-bottom: 12px; }
+  .empty p { font-size: 13px; line-height: 1.7; }
+  .loading { text-align: center; padding: 80px 20px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; }
+
+  .setup-screen { max-width: 540px; margin: 60px auto; padding: 0 20px; }
+  .setup-screen .brand { text-align: center; margin-bottom: 32px; }
+  .setup-screen h1 { font-family: 'Fraunces', serif; font-size: 36px; letter-spacing: -0.02em; }
+  .setup-screen h1 em { color: var(--accent); }
+  .setup-card { background: var(--bg-card); border: 1px solid var(--line); padding: 32px; }
+  .setup-card h2 { font-family: 'Fraunces', serif; font-size: 22px; margin-bottom: 6px; }
+  .setup-card .lead { font-size: 13px; color: var(--ink-soft); margin-bottom: 24px; line-height: 1.7; }
+  .test-result { padding: 12px 14px; margin-top: 12px; font-size: 13px; line-height: 1.5; display: none; }
+  .test-result.success { background: var(--green-soft); color: var(--green); border-left: 3px solid var(--green); display: block; }
+  .test-result.error { background: var(--red-soft); color: var(--red); border-left: 3px solid var(--red); display: block; }
+
+  @media (max-width: 640px) {
+    .app { padding: 18px 16px calc(60px + var(--safe-bottom)); }
+    .header { flex-direction: column; align-items: stretch; gap: 12px; padding-bottom: 16px; margin-bottom: 20px; }
+    .brand h1 { font-size: 30px; }
+    .header-right { justify-content: space-between; width: 100%; }
+    .meta { text-align: left; }
+    .switch-btn { flex: 1; padding: 14px 8px 16px; font-size: 16px; text-align: center; }
+    .switcher { display: flex; }
+    .stats { grid-template-columns: repeat(2, 1fr); margin-bottom: 22px; }
+    .stat { padding: 14px 14px; }
+    .stat .value { font-size: 24px; }
+    .toolbar { align-items: stretch; flex-direction: column; }
+    .toolbar-left { font-size: 19px; }
+    .toolbar-left .desc { display: block; margin-left: 0; margin-top: 4px; }
+    .toolbar-right { width: 100%; gap: 8px; }
+    .toolbar-right .btn { flex: 1; }
+    .project-head { padding: 16px; flex-wrap: wrap; }
+    .project-head h3 { width: 100%; font-size: 17px; }
+    .project-head .pj-meta { width: 100%; justify-content: space-between; gap: 8px; }
+    .nodes { padding: 18px 14px 20px; }
+    .node-row { grid-template-columns: 28px 1fr; gap: 12px; }
+    .node-row::before { left: 13px; top: 28px; }
+    .node-marker { width: 28px; height: 28px; font-size: 11px; }
+    .add-node-row { grid-template-columns: 28px 1fr; gap: 12px; }
+    .field-row { grid-template-columns: 1fr; }
+    .modal { padding: 22px 20px calc(22px + var(--safe-bottom)); max-height: 100vh; max-height: 100dvh; width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; }
+    .modal-bg { padding: 0; align-items: flex-end; }
+    .routine-item { grid-template-columns: 26px 1fr auto; gap: 10px; padding: 14px; }
+    .routine-item .r-actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: -4px; }
+    .setup-screen { margin: 30px auto; }
+    .setup-card { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Setup screen (shown only on first load or when no config) -->
+<div id="setupScreen" class="setup-screen" style="display:none">
+  <div class="brand">
+    <div style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.18em; color:var(--ink-mute); margin-bottom:6px">— PERSONAL OPERATING SYSTEM —</div>
+    <h1>Task <em>Roadmap</em></h1>
+  </div>
+  <div class="setup-card">
+    <h2>初期設定</h2>
+    <p class="lead">GitHubリポジトリと連携して、複数の端末でデータを同期します。最初に一度だけ設定が必要です。</p>
+    <div class="field">
+      <label>GitHub ユーザー名</label>
+      <input id="setupUser" placeholder="例: apra-GrowthStrategy-gh" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>データ用リポジトリ名</label>
+      <input id="setupRepo" placeholder="例: task_management_data" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Personal Access Token</label>
+      <input id="setupToken" type="password" placeholder="github_pat_..." autocomplete="off">
+      <div class="help-text">トークンはこの端末のブラウザにのみ保存され、外部に送信されません(GitHub APIを除く)。</div>
+    </div>
+    <div class="test-result" id="setupTestResult"></div>
+    <div class="modal-actions">
+      <span></span>
+      <div class="right">
+        <button class="btn" id="setupSaveBtn">接続テストして開始</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main app -->
+<div class="app" id="mainApp" style="display:none">
+  <header class="header">
+    <div class="brand">
+      <div class="eyebrow">— PERSONAL OPERATING SYSTEM —</div>
+      <h1>Task <em>Roadmap</em></h1>
+    </div>
+    <div class="header-right">
+      <div class="meta" id="meta">
+        <div id="metaDate">—</div>
+        <div id="metaSummary">loading...</div>
+      </div>
+      <div class="sync-indicator idle" id="syncIndicator">SYNCED</div>
+      <button class="icon-circle-btn" id="settingsBtn" aria-label="設定" title="設定">⚙</button>
+      <button class="icon-circle-btn" id="helpBtn" aria-label="使い方" title="使い方">i</button>
+    </div>
+  </header>
+
+  <nav class="switcher" id="switcher">
+    <button class="switch-btn active" data-view="projects"><span class="num">01</span>Projects</button>
+    <button class="switch-btn" data-view="routines"><span class="num">02</span>Routines</button>
+  </nav>
+
+  <div class="stats" id="statsRow"></div>
+
+  <div class="toolbar">
+    <div class="toolbar-left" id="viewTitle">Project Roadmaps<span class="desc">— 始まりと終わりのある仕事</span></div>
+    <div class="toolbar-right">
+      <button class="btn ghost" id="reloadBtn">↻ 再読込</button>
+      <button class="btn" id="addBtn">+ Add</button>
+    </div>
+  </div>
+
+  <div class="loading" id="loadingView">LOADING FROM GITHUB...</div>
+
+  <section class="roadmap" id="projectsView">
+    <div id="projectList"></div>
+    <button class="add-project-btn" id="addProjectBtn">+ 新しいプロジェクトを追加</button>
+  </section>
+
+  <section class="routines" id="routinesView">
+    <div class="cycle-tabs" id="cycleTabs">
+      <button class="cycle-tab active" data-cycle="daily">DAILY</button>
+      <button class="cycle-tab" data-cycle="weekly">WEEKLY</button>
+      <button class="cycle-tab" data-cycle="monthly">MONTHLY</button>
+    </div>
+    <div class="routine-list" id="routineList"></div>
+  </section>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+  // ============ State ============
+  const STATE = {
+    view: 'projects',
+    cycle: 'daily',
+    projects: [],
+    routines: { daily: [], weekly: [], monthly: [] },
+    routineLastReset: { daily: '', weekly: '', monthly: '' },
+    sha: null,
+    pendingSave: false,
+    saveTimer: null
+  };
+  const CONFIG_KEY = 'task_roadmap_config_v1';
+  const CACHE_KEY = 'task_roadmap_cache_v1';
+  const DATA_FILE = 'data.json';
+
+  // ============ Config ============
+  function getConfig() {
+    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+  function setConfig(cfg) { localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); }
+
+  // ============ GitHub API ============
+  async function ghFetch(path, options = {}) {
+    const cfg = getConfig();
+    if (!cfg) throw new Error('NO_CONFIG');
+    const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${path}`;
+    const headers = {
+      'Authorization': `Bearer ${cfg.token}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(options.headers || {})
+    };
+    const res = await fetch(url, { ...options, headers });
+    return res;
+  }
+
+  async function ghLoadData() {
+    const res = await ghFetch(DATA_FILE);
+    if (res.status === 404) {
+      return { found: false };
+    }
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    }
+    const json = await res.json();
+    const content = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ''))));
+    return { found: true, data: JSON.parse(content), sha: json.sha };
+  }
+
+  async function ghSaveData(data, prevSha) {
+    const json = JSON.stringify(data, null, 2);
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    const body = {
+      message: `Update tasks · ${new Date().toISOString()}`,
+      content: b64,
+    };
+    if (prevSha) body.sha = prevSha;
+    const res = await ghFetch(DATA_FILE, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Save failed: HTTP ${res.status}: ${errText}`);
+    }
+    const result = await res.json();
+    return result.content.sha;
+  }
+
+  async function ghTestConnection(user, repo, token) {
+    const url = `https://api.github.com/repos/${user}/${repo}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (res.status === 401) return { ok: false, msg: 'トークンが無効です。再生成してください。' };
+    if (res.status === 404) return { ok: false, msg: 'リポジトリが見つかりません。ユーザー名とリポジトリ名を確認してください。トークンの権限がそのリポジトリに付与されているかも確認を。' };
+    if (!res.ok) return { ok: false, msg: `エラー(HTTP ${res.status}): ${await res.text()}` };
+    return { ok: true };
+  }
+
+  // ============ Sync indicator ============
+  function setSyncStatus(status, label) {
+    const el = document.getElementById('syncIndicator');
+    el.className = `sync-indicator ${status}`;
+    el.textContent = label;
+  }
+
+  // ============ Cache (offline fallback) ============
+  function cacheSet(data) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, savedAt: Date.now() })); }
+    catch (e) {}
+  }
+  function cacheGet() {
+    try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+
+  // ============ Data load/save ============
+  async function loadData() {
+    setSyncStatus('syncing', 'LOADING');
+    try {
+      const result = await ghLoadData();
+      if (result.found) {
+        Object.assign(STATE, result.data);
+        STATE.sha = result.sha;
+        cacheSet(result.data);
+        setSyncStatus('idle', 'SYNCED');
+      } else {
+        // First time - seed defaults and save
+        seedDefaults();
+        await saveDataNow();
+        setSyncStatus('idle', 'SYNCED');
+      }
+    } catch (e) {
+      console.warn('Load failed, using cache:', e);
+      const cached = cacheGet();
+      if (cached) {
+        Object.assign(STATE, cached.data);
+        setSyncStatus('offline', 'OFFLINE (CACHED)');
+      } else {
+        seedDefaults();
+        setSyncStatus('error', 'LOAD ERROR');
+        setTimeout(() => alert('GitHubからのデータ読み込みに失敗しました。\n\n' + e.message + '\n\n設定を確認してください。'), 100);
+      }
+    }
+    checkRoutineReset();
+  }
+
+  function debouncedSave() {
+    if (STATE.saveTimer) clearTimeout(STATE.saveTimer);
+    STATE.pendingSave = true;
+    setSyncStatus('syncing', 'SAVING...');
+    // Save cache immediately
+    cacheSet({
+      projects: STATE.projects,
+      routines: STATE.routines,
+      routineLastReset: STATE.routineLastReset
+    });
+    STATE.saveTimer = setTimeout(saveDataNow, 1500);
+  }
+
+  async function saveDataNow() {
+    if (STATE.saveTimer) { clearTimeout(STATE.saveTimer); STATE.saveTimer = null; }
+    const data = {
+      projects: STATE.projects,
+      routines: STATE.routines,
+      routineLastReset: STATE.routineLastReset
+    };
+    setSyncStatus('syncing', 'SAVING...');
+    try {
+      const newSha = await ghSaveData(data, STATE.sha);
+      STATE.sha = newSha;
+      STATE.pendingSave = false;
+      cacheSet(data);
+      setSyncStatus('idle', 'SYNCED');
+    } catch (e) {
+      console.error('Save failed:', e);
+      // If sha conflict (someone else updated), refetch and retry once
+      if (e.message.includes('409') || e.message.includes('sha')) {
+        try {
+          const fresh = await ghLoadData();
+          STATE.sha = fresh.sha;
+          // For simplicity: warn user and reload from server
+          setSyncStatus('error', 'CONFLICT - RELOADING');
+          alert('別の端末で更新がありました。最新データを再読込します。');
+          await loadData();
+          render();
+          return;
+        } catch (e2) {}
+      }
+      setSyncStatus('error', 'SAVE FAILED');
+    }
+  }
+
+  function seedDefaults() {
+    STATE.projects = [{
+      id: pid(),
+      title: '事業計画書 改訂版作成',
+      nodes: [
+        { id: pid(), title: '前期実績データの整理と確認', status: 'done', priority: 'high', due: '', note: '' },
+        { id: pid(), title: '市場前提と KPI ツリーの再設計', status: 'doing', priority: 'high', due: '', note: '経営層レビュー前に固める' },
+        { id: pid(), title: '財務シミュレーション(3ケース)', status: 'todo', priority: 'mid', due: '', note: '' },
+        { id: pid(), title: 'ドラフト作成・部内レビュー', status: 'todo', priority: 'mid', due: '', note: '' },
+        { id: pid(), title: '経営会議への提出', status: 'todo', priority: 'high', due: '', note: '' }
+      ]
+    }];
+    STATE.routines = {
+      daily: [
+        { id: pid(), title: '朝のキャッシュポジション確認', done: false, streak: 0 },
+        { id: pid(), title: '受信メール・Slack の処理', done: false, streak: 0 }
+      ],
+      weekly: [
+        { id: pid(), title: '週次キャッシュレポート作成', done: false, streak: 0 },
+        { id: pid(), title: 'チーム1on1の振り返り', done: false, streak: 0 }
+      ],
+      monthly: [
+        { id: pid(), title: '月次決算データの取りまとめ', done: false, streak: 0 },
+        { id: pid(), title: '月次グロース指標レビュー', done: false, streak: 0 }
+      ]
+    };
+  }
+  function pid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function checkRoutineReset() {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const weekKey = getWeekKey(now);
+    const monthKey = today.slice(0, 7);
+    let changed = false;
+    if (STATE.routineLastReset.daily !== today) {
+      if (STATE.routineLastReset.daily) {
+        STATE.routines.daily.forEach(r => {
+          if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0;
+          r.done = false;
+        });
+        changed = true;
+      }
+      STATE.routineLastReset.daily = today;
+    }
+    if (STATE.routineLastReset.weekly !== weekKey) {
+      if (STATE.routineLastReset.weekly) {
+        STATE.routines.weekly.forEach(r => {
+          if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0;
+          r.done = false;
+        });
+        changed = true;
+      }
+      STATE.routineLastReset.weekly = weekKey;
+    }
+    if (STATE.routineLastReset.monthly !== monthKey) {
+      if (STATE.routineLastReset.monthly) {
+        STATE.routines.monthly.forEach(r => {
+          if (r.done) r.streak = (r.streak || 0) + 1; else r.streak = 0;
+          r.done = false;
+        });
+        changed = true;
+      }
+      STATE.routineLastReset.monthly = monthKey;
+    }
+    if (changed) debouncedSave();
+  }
+  function getWeekKey(d) {
+    const target = new Date(d);
+    target.setHours(0, 0, 0, 0);
+    target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
+    const week1 = new Date(target.getFullYear(), 0, 4);
+    const wn = 1 + Math.round(((target - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    return target.getFullYear() + '-W' + String(wn).padStart(2, '0');
+  }
+
+  // ============ Render ============
+  function render() {
+    renderHeader(); renderStats(); renderToolbar();
+    if (STATE.view === 'projects') {
+      document.getElementById('projectsView').classList.add('active');
+      document.getElementById('routinesView').classList.remove('active');
+      renderProjects();
+    } else {
+      document.getElementById('projectsView').classList.remove('active');
+      document.getElementById('routinesView').classList.add('active');
+      renderRoutines();
+    }
+    document.querySelectorAll('.switch-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === STATE.view);
+    });
+  }
+  function renderHeader() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' });
+    document.getElementById('metaDate').textContent = dateStr.toUpperCase();
+    const totalNodes = STATE.projects.reduce((s, p) => s + p.nodes.length, 0);
+    const totalRoutines = STATE.routines.daily.length + STATE.routines.weekly.length + STATE.routines.monthly.length;
+    document.getElementById('metaSummary').textContent = `${STATE.projects.length} PJ · ${totalNodes} NODES · ${totalRoutines} RTN`;
+  }
+  function renderStats() {
+    const row = document.getElementById('statsRow');
+    if (STATE.view === 'projects') {
+      const allNodes = STATE.projects.flatMap(p => p.nodes);
+      const done = allNodes.filter(n => n.status === 'done').length;
+      const doing = allNodes.filter(n => n.status === 'doing').length;
+      const blocked = allNodes.filter(n => n.status === 'blocked').length;
+      const total = allNodes.length || 1;
+      const pct = Math.round((done / total) * 100);
+      row.innerHTML = `
+        <div class="stat"><div class="label">Active Projects</div><div class="value">${STATE.projects.length}<span class="unit">件</span></div></div>
+        <div class="stat"><div class="label">In Progress</div><div class="value">${doing}<span class="unit">node</span></div></div>
+        <div class="stat"><div class="label">Blocked</div><div class="value">${blocked}<span class="unit">node</span></div></div>
+        <div class="stat"><div class="label">Completion</div><div class="value">${pct}<span class="unit">%</span></div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+    } else {
+      const cur = STATE.routines[STATE.cycle];
+      const done = cur.filter(r => r.done).length;
+      const total = cur.length || 1;
+      const pct = Math.round((done / total) * 100);
+      const maxStreak = Math.max(0, ...cur.map(r => r.streak || 0));
+      row.innerHTML = `
+        <div class="stat"><div class="label">Routines (${STATE.cycle})</div><div class="value">${cur.length}<span class="unit">items</span></div></div>
+        <div class="stat"><div class="label">Completed</div><div class="value">${done}<span class="unit">/ ${cur.length}</span></div></div>
+        <div class="stat"><div class="label">Best Streak</div><div class="value">${maxStreak}<span class="unit">cycle</span></div></div>
+        <div class="stat"><div class="label">Today's Rate</div><div class="value">${pct}<span class="unit">%</span></div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+    }
+  }
+  function renderToolbar() {
+    const t = document.getElementById('viewTitle');
+    if (STATE.view === 'projects') t.innerHTML = `Project Roadmaps <span class="desc">— 始まりと終わりのある仕事</span>`;
+    else t.innerHTML = `Routines <span class="desc">— 繰り返し回す仕事</span>`;
+  }
+  function renderProjects() {
+    const list = document.getElementById('projectList');
+    if (STATE.projects.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-art">— blank canvas —</div><p>プロジェクトを追加して、最初のロードマップを描きましょう</p></div>`;
+      return;
+    }
+    list.innerHTML = STATE.projects.map(p => renderProject(p)).join('');
+  }
+  function renderProject(p) {
+    const total = p.nodes.length || 1;
+    const done = p.nodes.filter(n => n.status === 'done').length;
+    const pct = Math.round((done / total) * 100);
+    const r = 14, c = 2 * Math.PI * r, off = c - (pct / 100) * c;
+    return `
+      <div class="project-card">
+        <div class="project-head">
+          <h3>${escapeHtml(p.title)}</h3>
+          <div class="pj-meta">
+            <span>${done}/${p.nodes.length}</span>
+            <div class="progress-circle">
+              <svg width="36" height="36">
+                <circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--line-soft)" stroke-width="2.5"/>
+                <circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round"/>
+              </svg>
+              <div class="pc-text">${pct}</div>
+            </div>
+            <div class="pj-actions">
+              <button class="icon-btn" data-act="edit-pj" data-id="${p.id}">✎</button>
+              <button class="icon-btn danger" data-act="del-pj" data-id="${p.id}">×</button>
+            </div>
+          </div>
+        </div>
+        <div class="nodes">
+          ${p.nodes.map((n, i) => renderNode(p.id, n, i)).join('')}
+          <div class="add-node-row">
+            <div></div>
+            <button class="add-node-btn" data-act="add-node" data-pjid="${p.id}">+ アクションを追加</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  function renderNode(pjId, n, idx) {
+    const num = String(idx + 1).padStart(2, '0');
+    const marker = n.status === 'done' ? '✓' : n.status === 'doing' ? '●' : n.status === 'blocked' ? '!' : num;
+    const priorityPill = n.priority ? `<span class="pill priority-${n.priority}">${n.priority === 'high' ? 'HIGH' : n.priority === 'mid' ? 'MID' : 'LOW'}</span>` : '';
+    let duePill = '';
+    if (n.due) {
+      const today = new Date().toISOString().slice(0, 10);
+      const diff = (new Date(n.due) - new Date(today)) / 86400000;
+      let cls = '';
+      if (diff < 0 && n.status !== 'done') cls = 'due-overdue';
+      else if (diff <= 3 && n.status !== 'done') cls = 'due-soon';
+      duePill = `<span class="pill ${cls}">${n.due}</span>`;
+    }
+    return `
+      <div class="node-row" data-status="${n.status}">
+        <div class="node-marker" data-act="cycle-status" data-pjid="${pjId}" data-id="${n.id}">${marker}</div>
+        <div class="node-body" data-act="edit-node" data-pjid="${pjId}" data-id="${n.id}">
+          <div class="node-title">${escapeHtml(n.title)}</div>
+          <div class="node-meta">
+            ${priorityPill}
+            ${duePill}
+            ${n.note ? '<span style="color:var(--gold)">notes ✦</span>' : ''}
+          </div>
+          ${n.note ? `<div class="node-note">${escapeHtml(n.note)}</div>` : ''}
+        </div>
+      </div>`;
+  }
+  function renderRoutines() {
+    document.querySelectorAll('.cycle-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.cycle === STATE.cycle);
+    });
+    const list = document.getElementById('routineList');
+    const items = STATE.routines[STATE.cycle];
+    if (items.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-art">— no routines yet —</div><p>習慣化したいタスクを追加しましょう</p></div>`;
+      return;
+    }
+    list.innerHTML = items.map(r => `
+      <div class="routine-item ${r.done ? 'done' : ''}">
+        <div class="check" data-act="toggle-r" data-id="${r.id}">✓</div>
+        <div class="r-title" data-act="edit-r" data-id="${r.id}">${escapeHtml(r.title)}</div>
+        ${(r.streak || 0) > 0 ? `<div class="r-streak">🔥 ${r.streak}</div>` : '<div></div>'}
+        <div class="r-actions">
+          <button class="icon-btn" data-act="edit-r" data-id="${r.id}">✎</button>
+          <button class="icon-btn danger" data-act="del-r" data-id="${r.id}">×</button>
+        </div>
+      </div>`).join('');
+  }
+  function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ============ Modals ============
+  function openModal(html) {
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalBg').classList.add('open');
+  }
+  function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+  function modalHelp() {
+    openModal(`
+      <h2>使い方</h2>
+      <div class="modal-sub">— Task Roadmap 操作ルール</div>
+      <div class="help-section">
+        <h3>2つのモード</h3>
+        <div class="help-rule"><span class="key">Projects</span><span class="val"><strong>始まりと終わりがある仕事</strong>。事業計画作成、新システム導入など。</span></div>
+        <div class="help-rule"><span class="key">Routines</span><span class="val"><strong>繰り返し回す仕事</strong>。日次キャッシュ確認、週次レポートなど。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>Projects モード</h3>
+        <div class="help-rule"><span class="key">丸タップ</span><span class="val">ノード左の<strong>丸印</strong>をタップで、ステータスが循環します。</span></div>
+        <div class="status-legend">
+          <div class="legend-row"><div class="legend-dot todo">01</div>未着手 → タップ</div>
+          <div class="legend-row"><div class="legend-dot doing">●</div>進行中(強調) → タップ</div>
+          <div class="legend-row"><div class="legend-dot done">✓</div>完了 → タップ</div>
+          <div class="legend-row"><div class="legend-dot blocked">!</div>ブロック中 → タップで未着手に戻る</div>
+        </div>
+        <div class="help-rule" style="margin-top:14px"><span class="key">本文タップ</span><span class="val">タイトル、優先度、期限、メモを<strong>編集</strong>。</span></div>
+        <div class="help-rule"><span class="key">期限色</span><span class="val">3日以内は<span style="color:#8a6820">アンバー</span>、超過は<span style="color:var(--red)">赤</span>。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>Routines モード</h3>
+        <div class="help-rule"><span class="key">チェック</span><span class="val">左の<strong>四角</strong>をタップで完了/未完了をトグル。</span></div>
+        <div class="help-rule"><span class="key">🔥 ストリーク</span><span class="val"><strong>連続達成サイクル数</strong>。サイクル切替時に自動更新。</span></div>
+        <div class="help-rule"><span class="key">サイクル</span><span class="val">DAILY / WEEKLY / MONTHLY を切替。</span></div>
+      </div>
+      <div class="help-section">
+        <h3>同期</h3>
+        <div class="help-rule"><span class="key">SYNCED</span><span class="val">変更はGitHubに自動保存。<strong>1.5秒後</strong>にまとめてコミット。</span></div>
+        <div class="help-rule"><span class="key">OFFLINE</span><span class="val">通信失敗時は端末内に保存。次回オンライン時に同期。</span></div>
+        <div class="help-rule"><span class="key">↻ 再読込</span><span class="val">他端末の最新データを取得。</span></div>
+      </div>
+      <div class="modal-actions">
+        <span></span>
+        <div class="right"><button class="btn" data-act="modal-close">閉じる</button></div>
+      </div>
+    `);
+  }
+
+  function modalSettings() {
+    const cfg = getConfig() || {};
+    openModal(`
+      <h2>設定</h2>
+      <div class="modal-sub">— GitHub接続情報</div>
+      <div class="field">
+        <label>GitHub ユーザー名</label>
+        <input id="cfg-user" value="${escapeHtml(cfg.user || '')}">
+      </div>
+      <div class="field">
+        <label>リポジトリ名</label>
+        <input id="cfg-repo" value="${escapeHtml(cfg.repo || '')}">
+      </div>
+      <div class="field">
+        <label>Personal Access Token</label>
+        <input id="cfg-token" type="password" placeholder="変更する場合のみ入力" autocomplete="off">
+        <div class="help-text">空欄のまま保存すると、現在のトークンが維持されます。</div>
+      </div>
+      <div class="modal-actions">
+        <span><button class="btn ghost" style="color:var(--red);border-color:var(--red)" data-act="reset-config">設定を削除</button></span>
+        <div class="right">
+          <button class="btn ghost" data-act="modal-close">キャンセル</button>
+          <button class="btn" data-act="save-config">保存</button>
+        </div>
+      </div>
+    `);
+  }
+
+  function modalNewProject() {
+    openModal(`
+      <h2>New Project</h2>
+      <div class="modal-sub">— 新しいプロジェクト</div>
+      <div class="field"><label>プロジェクト名</label><input id="m-title" placeholder="例: 事業計画書改訂版作成"></div>
+      <div class="modal-actions"><span></span><div class="right">
+        <button class="btn ghost" data-act="modal-close">キャンセル</button>
+        <button class="btn" data-act="modal-save-pj">追加</button>
+      </div></div>
+    `);
+    setTimeout(() => document.getElementById('m-title')?.focus(), 100);
+  }
+  function modalEditProject(p) {
+    openModal(`
+      <h2>Edit Project</h2>
+      <div class="modal-sub">— プロジェクトを編集</div>
+      <div class="field"><label>プロジェクト名</label><input id="m-title" value="${escapeHtml(p.title)}"></div>
+      <div class="modal-actions"><span></span><div class="right">
+        <button class="btn ghost" data-act="modal-close">キャンセル</button>
+        <button class="btn" data-act="modal-save-pj-edit" data-id="${p.id}">保存</button>
+      </div></div>
+    `);
+  }
+  function modalNode(pjId, node) {
+    const isNew = !node;
+    const n = node || { title: '', status: 'todo', priority: 'mid', due: '', note: '' };
+    openModal(`
+      <h2>${isNew ? 'New Action' : 'Edit Action'}</h2>
+      <div class="modal-sub">— ${isNew ? 'アクションを追加' : 'アクションを編集'}</div>
+      <div class="field"><label>アクション内容</label><input id="n-title" value="${escapeHtml(n.title)}" placeholder="例: 財務シミュレーション"></div>
+      <div class="field-row">
+        <div class="field"><label>ステータス</label>
+          <select id="n-status">
+            <option value="todo" ${n.status==='todo'?'selected':''}>未着手</option>
+            <option value="doing" ${n.status==='doing'?'selected':''}>進行中</option>
+            <option value="done" ${n.status==='done'?'selected':''}>完了</option>
+            <option value="blocked" ${n.status==='blocked'?'selected':''}>ブロック中</option>
+          </select>
+        </div>
+        <div class="field"><label>優先度</label>
+          <select id="n-priority">
+            <option value="high" ${n.priority==='high'?'selected':''}>HIGH</option>
+            <option value="mid" ${n.priority==='mid'?'selected':''}>MID</option>
+            <option value="low" ${n.priority==='low'?'selected':''}>LOW</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>期限</label><input type="date" id="n-due" value="${n.due || ''}"></div>
+      <div class="field"><label>メモ</label><textarea id="n-note" placeholder="補足やゴールイメージ">${escapeHtml(n.note || '')}</textarea></div>
+      <div class="modal-actions">
+        <span>${!isNew ? `<button class="btn ghost" style="color:var(--red);border-color:var(--red)" data-act="del-node" data-pjid="${pjId}" data-id="${n.id}">削除</button>` : ''}</span>
+        <div class="right">
+          <button class="btn ghost" data-act="modal-close">キャンセル</button>
+          <button class="btn" data-act="${isNew ? 'modal-save-node-new' : 'modal-save-node-edit'}" data-pjid="${pjId}" data-id="${n.id || ''}">${isNew ? '追加' : '保存'}</button>
+        </div>
+      </div>
+    `);
+    setTimeout(() => document.getElementById('n-title')?.focus(), 100);
+  }
+  function modalRoutine(routine) {
+    const isNew = !routine;
+    const r = routine || { title: '' };
+    openModal(`
+      <h2>${isNew ? 'New Routine' : 'Edit Routine'}</h2>
+      <div class="modal-sub">— ${STATE.cycle.toUpperCase()} routine</div>
+      <div class="field"><label>ルーティン名</label><input id="r-title" value="${escapeHtml(r.title)}" placeholder="例: 朝のキャッシュ確認"></div>
+      <div class="modal-actions"><span></span><div class="right">
+        <button class="btn ghost" data-act="modal-close">キャンセル</button>
+        <button class="btn" data-act="${isNew ? 'modal-save-r-new' : 'modal-save-r-edit'}" data-id="${r.id || ''}">${isNew ? '追加' : '保存'}</button>
+      </div></div>
+    `);
+    setTimeout(() => document.getElementById('r-title')?.focus(), 100);
+  }
+
+  // ============ Setup screen ============
+  function showSetup() {
+    document.getElementById('setupScreen').style.display = 'block';
+    document.getElementById('mainApp').style.display = 'none';
+    const cfg = getConfig();
+    if (cfg) {
+      document.getElementById('setupUser').value = cfg.user || '';
+      document.getElementById('setupRepo').value = cfg.repo || '';
+    }
+  }
+  function showMain() {
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  }
+
+  document.getElementById('setupSaveBtn').addEventListener('click', async () => {
+    const user = document.getElementById('setupUser').value.trim();
+    const repo = document.getElementById('setupRepo').value.trim();
+    const token = document.getElementById('setupToken').value.trim();
+    const result = document.getElementById('setupTestResult');
+    result.className = 'test-result';
+    result.style.display = 'none';
+    if (!user || !repo || !token) {
+      result.className = 'test-result error';
+      result.textContent = '3つすべての項目を入力してください。';
+      return;
+    }
+    result.className = 'test-result';
+    result.style.display = 'block';
+    result.textContent = '接続テスト中...';
+    const test = await ghTestConnection(user, repo, token);
+    if (!test.ok) {
+      result.className = 'test-result error';
+      result.textContent = '✕ ' + test.msg;
+      return;
+    }
+    result.className = 'test-result success';
+    result.textContent = '✓ 接続成功。アプリを開始します...';
+    setConfig({ user, repo, token });
+    setTimeout(async () => {
+      showMain();
+      await loadData();
+      document.getElementById('loadingView').style.display = 'none';
+      render();
+    }, 600);
+  });
+
+  // ============ Event handlers ============
+  document.getElementById('switcher').addEventListener('click', (e) => {
+    const btn = e.target.closest('.switch-btn');
+    if (!btn) return;
+    STATE.view = btn.dataset.view;
+    render();
+  });
+  document.getElementById('cycleTabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.cycle-tab');
+    if (!tab) return;
+    STATE.cycle = tab.dataset.cycle;
+    render();
+  });
+
+  document.addEventListener('click', async (e) => {
+    const t = e.target.closest('[data-act]');
+    if (!t) return;
+    const act = t.dataset.act;
+
+    if (act === 'modal-close') return closeModal();
+
+    if (act === 'save-config') {
+      const user = document.getElementById('cfg-user').value.trim();
+      const repo = document.getElementById('cfg-repo').value.trim();
+      const tokenInput = document.getElementById('cfg-token').value.trim();
+      const cur = getConfig() || {};
+      const token = tokenInput || cur.token;
+      if (!user || !repo || !token) { alert('すべての項目が必要です'); return; }
+      const test = await ghTestConnection(user, repo, token);
+      if (!test.ok) { alert('接続テスト失敗: ' + test.msg); return; }
+      setConfig({ user, repo, token });
+      closeModal();
+      // Reload data with new config
+      STATE.sha = null;
+      await loadData();
+      render();
+      return;
+    }
+    if (act === 'reset-config') {
+      if (confirm('設定を削除すると、初期画面に戻ります。データはGitHubに残ります。\n本当に削除しますか?')) {
+        localStorage.removeItem(CONFIG_KEY);
+        localStorage.removeItem(CACHE_KEY);
+        location.reload();
+      }
+      return;
+    }
+
+    if (act === 'modal-save-pj') {
+      const title = document.getElementById('m-title').value.trim();
+      if (!title) return;
+      STATE.projects.push({ id: pid(), title, nodes: [] });
+      closeModal(); render(); debouncedSave(); return;
+    }
+    if (act === 'modal-save-pj-edit') {
+      const p = STATE.projects.find(x => x.id === t.dataset.id);
+      if (p) p.title = document.getElementById('m-title').value.trim() || p.title;
+      closeModal(); render(); debouncedSave(); return;
+    }
+    if (act === 'edit-pj') {
+      e.stopPropagation();
+      const p = STATE.projects.find(x => x.id === t.dataset.id);
+      if (p) modalEditProject(p);
+      return;
+    }
+    if (act === 'del-pj') {
+      e.stopPropagation();
+      if (confirm('このプロジェクトを削除しますか?')) {
+        STATE.projects = STATE.projects.filter(x => x.id !== t.dataset.id);
+        render(); debouncedSave();
+      }
+      return;
+    }
+
+    if (act === 'cycle-status') {
+      e.stopPropagation();
+      const p = STATE.projects.find(x => x.id === t.dataset.pjid);
+      const n = p?.nodes.find(x => x.id === t.dataset.id);
+      if (n) {
+        const order = ['todo', 'doing', 'done', 'blocked'];
+        n.status = order[(order.indexOf(n.status) + 1) % order.length];
+        render(); debouncedSave();
+      }
+      return;
+    }
+    if (act === 'add-node') { modalNode(t.dataset.pjid, null); return; }
+    if (act === 'edit-node') {
+      const p = STATE.projects.find(x => x.id === t.dataset.pjid);
+      const n = p?.nodes.find(x => x.id === t.dataset.id);
+      if (n) modalNode(t.dataset.pjid, n);
+      return;
+    }
+    if (act === 'modal-save-node-new') {
+      const p = STATE.projects.find(x => x.id === t.dataset.pjid);
+      if (!p) return;
+      const title = document.getElementById('n-title').value.trim();
+      if (!title) return;
+      p.nodes.push({
+        id: pid(), title,
+        status: document.getElementById('n-status').value,
+        priority: document.getElementById('n-priority').value,
+        due: document.getElementById('n-due').value,
+        note: document.getElementById('n-note').value.trim()
+      });
+      closeModal(); render(); debouncedSave(); return;
+    }
+    if (act === 'modal-save-node-edit') {
+      const p = STATE.projects.find(x => x.id === t.dataset.pjid);
+      const n = p?.nodes.find(x => x.id === t.dataset.id);
+      if (!n) return;
+      n.title = document.getElementById('n-title').value.trim() || n.title;
+      n.status = document.getElementById('n-status').value;
+      n.priority = document.getElementById('n-priority').value;
+      n.due = document.getElementById('n-due').value;
+      n.note = document.getElementById('n-note').value.trim();
+      closeModal(); render(); debouncedSave(); return;
+    }
+    if (act === 'del-node') {
+      const p = STATE.projects.find(x => x.id === t.dataset.pjid);
+      if (p) p.nodes = p.nodes.filter(n => n.id !== t.dataset.id);
+      closeModal(); render(); debouncedSave(); return;
+    }
+
+    if (act === 'toggle-r') {
+      e.stopPropagation();
+      const r = STATE.routines[STATE.cycle].find(x => x.id === t.dataset.id);
+      if (r) r.done = !r.done;
+      render(); debouncedSave(); return;
+    }
+    if (act === 'edit-r') {
+      e.stopPropagation();
+      const r = STATE.routines[STATE.cycle].find(x => x.id === t.dataset.id);
+      if (r) modalRoutine(r);
+      return;
+    }
+    if (act === 'del-r') {
+      e.stopPropagation();
+      if (confirm('このルーティンを削除しますか?')) {
+        STATE.routines[STATE.cycle] = STATE.routines[STATE.cycle].filter(x => x.id !== t.dataset.id);
+        render(); debouncedSave();
+      }
+      return;
+    }
+    if (act === 'modal-save-r-new') {
+      const title = document.getElementById('r-title').value.trim();
+      if (!title) return;
+      STATE.routines[STATE.cycle].push({ id: pid(), title, done: false, streak: 0 });
+      closeModal(); render(); debouncedSave(); return;
+    }
+    if (act === 'modal-save-r-edit') {
+      const r = STATE.routines[STATE.cycle].find(x => x.id === t.dataset.id);
+      if (r) r.title = document.getElementById('r-title').value.trim() || r.title;
+      closeModal(); render(); debouncedSave(); return;
+    }
+  });
+
+  document.getElementById('modalBg').addEventListener('click', (e) => {
+    if (e.target.id === 'modalBg') closeModal();
+  });
+  document.getElementById('addBtn').addEventListener('click', () => {
+    if (STATE.view === 'projects') modalNewProject();
+    else modalRoutine(null);
+  });
+  document.getElementById('addProjectBtn').addEventListener('click', modalNewProject);
+  document.getElementById('helpBtn').addEventListener('click', modalHelp);
+  document.getElementById('settingsBtn').addEventListener('click', modalSettings);
+  document.getElementById('reloadBtn').addEventListener('click', async () => {
+    if (STATE.pendingSave) {
+      if (!confirm('未保存の変更があります。破棄して再読込しますか?')) return;
+    }
+    document.getElementById('loadingView').style.display = 'block';
+    document.getElementById('projectsView').classList.remove('active');
+    document.getElementById('routinesView').classList.remove('active');
+    STATE.sha = null;
+    await loadData();
+    document.getElementById('loadingView').style.display = 'none';
+    render();
+  });
+
+  // Save before leaving
+  window.addEventListener('beforeunload', (e) => {
+    if (STATE.pendingSave) {
+      // Trigger immediate save
+      saveDataNow();
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // ============ Init ============
+  (async () => {
+    const cfg = getConfig();
+    if (!cfg) {
+      showSetup();
+      return;
+    }
+    showMain();
+    await loadData();
+    document.getElementById('loadingView').style.display = 'none';
+    render();
+  })();
+</script>
+</body>
+</html>
