@@ -601,8 +601,8 @@
       <button class="cycle-tab" data-cycle="monthly">MONTHLY</button>
     </div>
     <div class="weekly-subtabs" id="weeklySubtabs" style="display:none">
-      <button class="weekly-subtab active" data-weekly-mode="today">今日のもの</button>
-      <button class="weekly-subtab" data-weekly-mode="all">全件</button>
+      <button class="weekly-subtab active" data-weekly-mode="all">全件</button>
+      <button class="weekly-subtab" data-weekly-mode="today">今日のもの</button>
     </div>
     <div class="routine-list" id="routineList"></div>
   </section>
@@ -616,7 +616,7 @@
   const STATE = {
     view: 'projects',
     cycle: 'daily',
-    weeklyMode: 'today', // 'today' or 'all'
+    weeklyMode: 'all', // 'all' (default) or 'today'
     projects: [],
     routines: { daily: [], weekly: [], monthly: [] },
     routineLastReset: { daily: '', weekly: '', monthly: '' },
