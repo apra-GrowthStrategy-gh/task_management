@@ -241,6 +241,85 @@
   body.scrolled .project-card {
     scroll-margin-top: 130px;
   }
+
+  /* Summary: routines section */
+  .summary-section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 28px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .summary-section-title .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 3px 8px;
+    background: var(--line-soft);
+    border-radius: 100px;
+    font-weight: 400;
+  }
+  .summary-section-title .progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-weight: 400;
+    margin-left: auto;
+  }
+  .summary-routine-list {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+  }
+  .summary-routine-item {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .summary-routine-item:last-child { border-bottom: none; }
+  .summary-routine-item.done .check {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+  .summary-routine-item.done .r-title {
+    text-decoration: line-through;
+    color: var(--ink-mute);
+  }
+  .summary-routine-item .r-title {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    word-break: break-word;
+  }
+  .summary-routine-item .r-side {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .summary-routine-item .r-dow-mini {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    padding: 2px 6px;
+    background: var(--line-soft);
+    border-radius: 8px;
+  }
+  .summary-empty-routine {
+    padding: 18px;
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 12px;
+    font-style: italic;
+  }
   .project-card.highlight-jumped {
     animation: highlightFlash 1.5s ease;
   }
@@ -836,9 +915,10 @@
 
   <div class="loading" id="loadingView">LOADING FROM GITHUB...</div>
 
-  <!-- Summary view: project highlights -->
+  <!-- Summary view: project highlights + today's routines -->
   <section class="summary-view" id="summaryView">
     <div class="dashboard" id="dashboard"></div>
+    <div class="summary-routines" id="summaryRoutines"></div>
   </section>
 
   <section class="roadmap" id="projectsView">
@@ -1200,6 +1280,7 @@
     routinesEl.classList.toggle('active', STATE.view === 'routines');
     if (STATE.view === 'summary') {
       renderSummary();
+      renderSummaryRoutines();
     } else if (STATE.view === 'projects') {
       renderProjectsBottleneck();
       renderProjects();
@@ -1356,6 +1437,56 @@
     } else if (STATE.focusFilter === 'awaiting') {
       text.innerHTML = `<strong>Awaiting</strong> — 他者・上長待ちのアクションに絞り込み中`;
     }
+  }
+
+  // ============ Summary Routines section ============
+  function renderSummaryRoutines() {
+    const root = document.getElementById('summaryRoutines');
+    const todayDow = new Date().getDay();
+    const dowLabels = ['日','月','火','水','木','金','土'];
+
+    const sections = [
+      { cycle: 'daily', label: 'DAILY', items: STATE.routines.daily },
+      {
+        cycle: 'weekly', label: 'WEEKLY',
+        items: STATE.routines.weekly.filter(r => !r.dayOfWeek || r.dayOfWeek.length === 0 || r.dayOfWeek.includes(todayDow)),
+        suffix: '今日のもの'
+      },
+      { cycle: 'monthly', label: 'MONTHLY', items: STATE.routines.monthly }
+    ];
+
+    let html = '';
+    sections.forEach(section => {
+      const total = section.items.length;
+      const done = section.items.filter(r => r.done).length;
+      html += `
+        <div class="summary-section-title">
+          <span>${section.label}</span>
+          ${section.suffix ? `<span class="badge">${section.suffix}</span>` : ''}
+          ${total > 0 ? `<span class="progress">${done}/${total}</span>` : ''}
+        </div>`;
+      if (total === 0) {
+        html += `<div class="summary-routine-list"><div class="summary-empty-routine">${section.cycle === 'weekly' ? '今日該当のルーティンはありません' : 'ルーティンがありません'}</div></div>`;
+      } else {
+        html += `<div class="summary-routine-list">${section.items.map(r => {
+          const dowMini = (section.cycle === 'weekly' && r.dayOfWeek && r.dayOfWeek.length > 0)
+            ? `<span class="r-dow-mini">${r.dayOfWeek.slice().sort((a,b)=>a-b).map(d => dowLabels[d]).join('')}</span>`
+            : '';
+          const streakBadge = (r.streak || 0) > 0 ? `<span class="r-streak">🔥 ${r.streak}</span>` : '';
+          return `
+            <div class="summary-routine-item ${r.done ? 'done' : ''}" data-rid="${r.id}">
+              <div class="check" data-act="summary-toggle-r" data-cycle="${section.cycle}" data-id="${r.id}">✓</div>
+              <div class="r-title" data-act="summary-jump-r" data-cycle="${section.cycle}" data-id="${r.id}">${escapeHtml(r.title)}</div>
+              <div class="r-side">
+                ${dowMini}
+                ${streakBadge}
+              </div>
+            </div>`;
+        }).join('')}</div>`;
+      }
+    });
+
+    root.innerHTML = html;
   }
   function renderToolbar() {
     const t = document.getElementById('viewTitle');
@@ -2229,6 +2360,25 @@
     if (act === 'jump-routines-today') {
       STATE.view = 'routines';
       STATE.cycle = 'daily';
+      STATE.focusFilter = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render(); attachDragHandlers();
+      return;
+    }
+    // Summary: toggle routine in-place
+    if (act === 'summary-toggle-r') {
+      e.stopPropagation();
+      const cycle = t.dataset.cycle;
+      const r = STATE.routines[cycle].find(x => x.id === t.dataset.id);
+      if (r) r.done = !r.done;
+      render(); attachDragHandlers(); debouncedSave();
+      return;
+    }
+    // Summary: jump to routine cycle
+    if (act === 'summary-jump-r') {
+      e.stopPropagation();
+      STATE.view = 'routines';
+      STATE.cycle = t.dataset.cycle;
       STATE.focusFilter = null;
       window.scrollTo({ top: 0, behavior: 'smooth' });
       render(); attachDragHandlers();
