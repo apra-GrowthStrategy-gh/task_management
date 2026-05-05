@@ -121,13 +121,76 @@
   }
   .tag-chip.manage-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
-  .stat { background: var(--bg-card); padding: 16px 18px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, border 0.3s ease; max-height: 200px; overflow: hidden; }
+  .stat { background: var(--bg-card); padding: 16px 18px; cursor: pointer; transition: background 0.2s ease; position: relative; }
+  .stat:hover { background: rgba(184,70,42,0.04); }
+  .stat:active { background: rgba(184,70,42,0.08); }
+  .stat .stat-cta {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .stat:hover .stat-cta { opacity: 1; }
+  .stat.alert { background: linear-gradient(to bottom right, var(--bg-card), rgba(168,64,48,0.04)); }
+  .stat.alert .value { color: var(--red); }
   .stat .label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; line-height: 1.3; }
   .stat .value { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; line-height: 1; }
+  .stat .value .sub { font-size: 13px; color: var(--ink-mute); margin-left: 6px; font-weight: 400; }
   .stat .value .unit { font-size: 12px; color: var(--ink-mute); margin-left: 4px; font-weight: 400; }
   .stat .bar { height: 3px; background: var(--line-soft); margin-top: 10px; border-radius: 2px; overflow: hidden; }
   .stat .bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+
+  /* Compact mode: stats hide on scroll */
+  body.scrolled .stats {
+    max-height: 0;
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+  }
+  /* Sticky header on scroll */
+  .sticky-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    transition: padding 0.2s ease, box-shadow 0.2s ease;
+    padding-top: 0;
+  }
+  body.scrolled .sticky-bar {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 8px 0;
+  }
+
+  /* Active focus banner */
+  .focus-banner {
+    display: none;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--ink);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .focus-banner.active { display: flex; }
+  .focus-banner strong { color: var(--accent); font-weight: 600; }
+  .focus-banner .clear-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .focus-banner .clear-btn:hover { background: var(--accent); color: white; }
 
   .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
   .toolbar-left { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; }
@@ -565,20 +628,29 @@
     </div>
   </header>
 
-  <nav class="switcher" id="switcher">
-    <button class="switch-btn active" data-view="projects"><span class="num">01</span>Projects</button>
-    <button class="switch-btn" data-view="routines"><span class="num">02</span>Routines</button>
-  </nav>
-
-  <div class="filter-row" id="filterRow"></div>
-
+  <!-- Dashboard (collapses on scroll) -->
   <div class="stats" id="statsRow"></div>
 
-  <div class="toolbar">
-    <div class="toolbar-left" id="viewTitle">Project Roadmaps<span class="desc">— 始まりと終わりのある仕事</span></div>
-    <div class="toolbar-right">
-      <button class="btn ghost" id="reloadBtn">↻ 再読込</button>
-      <button class="btn" id="addBtn">+ Add</button>
+  <!-- Sticky bar: tabs + filter + toolbar always visible -->
+  <div class="sticky-bar">
+    <nav class="switcher" id="switcher">
+      <button class="switch-btn active" data-view="projects"><span class="num">01</span>Projects</button>
+      <button class="switch-btn" data-view="routines"><span class="num">02</span>Routines</button>
+    </nav>
+
+    <div class="filter-row" id="filterRow"></div>
+
+    <div class="focus-banner" id="focusBanner">
+      <span id="focusBannerText"></span>
+      <button class="clear-btn" data-act="clear-focus">CLEAR</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left" id="viewTitle">Project Roadmaps<span class="desc">— 始まりと終わりのある仕事</span></div>
+      <div class="toolbar-right">
+        <button class="btn ghost" id="reloadBtn">↻ 再読込</button>
+        <button class="btn" id="addBtn">+ Add</button>
+      </div>
     </div>
   </div>
 
@@ -617,6 +689,7 @@
     view: 'projects',
     cycle: 'daily',
     weeklyMode: 'all', // 'all' (default) or 'today'
+    focusFilter: null, // null | 'today-focus' | 'awaiting'
     projects: [],
     routines: { daily: [], weekly: [], monthly: [] },
     routineLastReset: { daily: '', weekly: '', monthly: '' },
@@ -914,9 +987,24 @@
     return items;
   }
 
+  // Apply focus filter at the node level
+  function nodeMatchesFocus(n, today) {
+    if (!STATE.focusFilter) return true;
+    if (STATE.focusFilter === 'today-focus') {
+      // Doing OR overdue (and not done/stay)
+      if (n.status === 'doing') return true;
+      if (n.due && n.status !== 'done' && n.status !== 'stay' && new Date(n.due) < new Date(today)) return true;
+      return false;
+    }
+    if (STATE.focusFilter === 'awaiting') {
+      return n.status === 'depend' || n.status === 'approve';
+    }
+    return true;
+  }
+
   // ============ Render ============
   function render() {
-    renderHeader(); renderFilters(); renderStats(); renderToolbar(); renderArchiveToggle();
+    renderHeader(); renderFilters(); renderStats(); renderFocusBanner(); renderToolbar(); renderArchiveToggle();
     if (STATE.view === 'projects') {
       document.getElementById('projectsView').classList.add('active');
       document.getElementById('routinesView').classList.remove('active');
@@ -989,33 +1077,72 @@
   }
   function renderStats() {
     const row = document.getElementById('statsRow');
-    if (STATE.view === 'projects') {
-      const filtered = getFilteredProjects();
-      const allNodes = filtered.flatMap(p => p.nodes);
-      const doing = allNodes.filter(n => n.status === 'doing').length;
-      const awaiting = allNodes.filter(n => n.status === 'depend' || n.status === 'approve').length;
-      const stayed = allNodes.filter(n => n.status === 'stay').length;
-      // Progressive completion: todo=0, doing=25, depend=50, approve=75, done=100, stay=excluded from calc
-      const STATUS_WEIGHT = { todo: 0, doing: 0.25, depend: 0.5, approve: 0.75, done: 1 };
-      const activeNodes = allNodes.filter(n => n.status !== 'stay');
-      const sumWeight = activeNodes.reduce((s, n) => s + (STATUS_WEIGHT[n.status] || 0), 0);
-      const pct = activeNodes.length > 0 ? Math.round((sumWeight / activeNodes.length) * 100) : 0;
-      row.innerHTML = `
-        <div class="stat"><div class="label">In Progress</div><div class="value">${doing}<span class="unit">node</span></div></div>
-        <div class="stat"><div class="label">Awaiting · 他者待ち</div><div class="value">${awaiting}<span class="unit">node</span></div></div>
-        <div class="stat"><div class="label">On Stay</div><div class="value">${stayed}<span class="unit">node</span></div></div>
-        <div class="stat"><div class="label">Completion</div><div class="value">${pct}<span class="unit">%</span></div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
-    } else {
-      const cur = getFilteredRoutines(STATE.cycle);
-      const done = cur.filter(r => r.done).length;
-      const total = cur.length || 1;
-      const pct = Math.round((done / total) * 100);
-      const maxStreak = Math.max(0, ...cur.map(r => r.streak || 0));
-      row.innerHTML = `
-        <div class="stat"><div class="label">Routines (${STATE.cycle})</div><div class="value">${cur.length}<span class="unit">items</span></div></div>
-        <div class="stat"><div class="label">Completed</div><div class="value">${done}<span class="unit">/ ${cur.length}</span></div></div>
-        <div class="stat"><div class="label">Best Streak</div><div class="value">${maxStreak}<span class="unit">cycle</span></div></div>
-        <div class="stat"><div class="label">Today's Rate</div><div class="value">${pct}<span class="unit">%</span></div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+    // Universal dashboard: same on both Projects/Routines view
+    const today = new Date().toISOString().slice(0, 10);
+    const todayDow = new Date().getDay();
+    // Project metrics (only non-archived)
+    const activeProjects = STATE.projects.filter(p => !p.archived);
+    const allNodes = activeProjects.flatMap(p => p.nodes);
+    const doing = allNodes.filter(n => n.status === 'doing').length;
+    const awaiting = allNodes.filter(n => n.status === 'depend' || n.status === 'approve').length;
+    const overdue = allNodes.filter(n => {
+      if (!n.due || n.status === 'done' || n.status === 'stay') return false;
+      return new Date(n.due) < new Date(today);
+    }).length;
+    const STATUS_WEIGHT = { todo: 0, doing: 0.25, depend: 0.5, approve: 0.75, done: 1 };
+    const counted = allNodes.filter(n => n.status !== 'stay');
+    const sumW = counted.reduce((s, n) => s + (STATUS_WEIGHT[n.status] || 0), 0);
+    const overallPct = counted.length > 0 ? Math.round((sumW / counted.length) * 100) : 0;
+
+    // Routine metrics (today)
+    const dailyAll = STATE.routines.daily;
+    const dailyDone = dailyAll.filter(r => r.done).length;
+    // Today's WEEKLY: matches today's day-of-week or has no day specified
+    const weeklyToday = STATE.routines.weekly.filter(r => !r.dayOfWeek || r.dayOfWeek.length === 0 || r.dayOfWeek.includes(todayDow));
+    const weeklyTodayDone = weeklyToday.filter(r => r.done).length;
+    const todayRoutineTotal = dailyAll.length + weeklyToday.length;
+    const todayRoutineDone = dailyDone + weeklyTodayDone;
+    const todayRoutinePct = todayRoutineTotal > 0 ? Math.round((todayRoutineDone / todayRoutineTotal) * 100) : 0;
+
+    // Card 1: Today's Focus (doing + overdue)
+    const focusCount = doing;
+    const isAlert = overdue > 0;
+    row.innerHTML = `
+      <div class="stat ${isAlert ? 'alert' : ''}" data-act="jump-focus">
+        <div class="stat-cta">TAP →</div>
+        <div class="label">Today's Focus · 自分が動かせる</div>
+        <div class="value">${focusCount}<span class="unit">件</span>${overdue > 0 ? `<span class="sub">/ ⚠ 期限超過 ${overdue}</span>` : ''}</div>
+      </div>
+      <div class="stat" data-act="jump-awaiting">
+        <div class="stat-cta">TAP →</div>
+        <div class="label">Awaiting · 他者/上長待ち</div>
+        <div class="value">${awaiting}<span class="unit">件</span></div>
+      </div>
+      <div class="stat" data-act="jump-routines-today">
+        <div class="stat-cta">TAP →</div>
+        <div class="label">Today's Routines</div>
+        <div class="value">${todayRoutineDone}<span class="sub">/ ${todayRoutineTotal}</span></div>
+        <div class="bar"><div class="bar-fill" style="width:${todayRoutinePct}%"></div></div>
+      </div>
+      <div class="stat" data-act="jump-projects">
+        <div class="stat-cta">TAP →</div>
+        <div class="label">Overall Progress · ${activeProjects.length} PJ</div>
+        <div class="value">${overallPct}<span class="unit">%</span></div>
+        <div class="bar"><div class="bar-fill" style="width:${overallPct}%"></div></div>
+      </div>`;
+  }
+  function renderFocusBanner() {
+    const banner = document.getElementById('focusBanner');
+    const text = document.getElementById('focusBannerText');
+    if (!STATE.focusFilter) {
+      banner.classList.remove('active');
+      return;
+    }
+    banner.classList.add('active');
+    if (STATE.focusFilter === 'today-focus') {
+      text.innerHTML = `<strong>Today's Focus</strong> — 自分が動かせる仕事(進行中・期限超過)に絞り込み中`;
+    } else if (STATE.focusFilter === 'awaiting') {
+      text.innerHTML = `<strong>Awaiting</strong> — 他者・上長待ちのアクションに絞り込み中`;
     }
   }
   function renderToolbar() {
@@ -1025,9 +1152,20 @@
   }
   function renderProjects() {
     const list = document.getElementById('projectList');
-    const filtered = getFilteredProjects();
+    let filtered = getFilteredProjects();
+    // Apply focus filter: only show projects with at least one matching node, and limit shown nodes
+    if (STATE.focusFilter) {
+      const today = new Date().toISOString().slice(0, 10);
+      filtered = filtered.map(p => {
+        const matchedNodes = p.nodes.filter(n => nodeMatchesFocus(n, today));
+        return matchedNodes.length > 0 ? { ...p, _focusNodes: matchedNodes } : null;
+      }).filter(Boolean);
+    }
     if (filtered.length === 0) {
-      list.innerHTML = `<div class="empty"><div class="empty-art">— blank canvas —</div><p>${STATE.activeFilters.length > 0 ? '該当するプロジェクトがありません' : 'プロジェクトを追加して、最初のロードマップを描きましょう'}</p></div>`;
+      const msg = STATE.focusFilter
+        ? '該当するアクションはありません'
+        : (STATE.activeFilters.length > 0 ? '該当するプロジェクトがありません' : 'プロジェクトを追加して、最初のロードマップを描きましょう');
+      list.innerHTML = `<div class="empty"><div class="empty-art">— ${STATE.focusFilter ? 'all clear' : 'blank canvas'} —</div><p>${msg}</p></div>`;
       return;
     }
     list.innerHTML = filtered.map(p => renderProject(p)).join('');
@@ -1073,12 +1211,12 @@
           </div>
         </div>
         <div class="nodes" data-pjid="${p.id}">
-          ${p.nodes.map((n, i) => renderNode(p.id, n, i)).join('')}
-          <div class="add-node-row">
+          ${(p._focusNodes || p.nodes).map((n, i) => renderNode(p.id, n, p.nodes.indexOf(n))).join('')}
+          ${STATE.focusFilter ? '' : `<div class="add-node-row">
             <div></div>
             <div></div>
             <button class="add-node-btn" data-act="add-node" data-pjid="${p.id}">+ アクションを追加</button>
-          </div>
+          </div>`}
         </div>
       </div>`;
   }
@@ -1475,6 +1613,14 @@
         <div class="help-rule"><span class="key">表示切替</span><span class="val">「アーカイブ済みも表示」でアーカイブ済みも一覧に表示。</span></div>
       </div>
       <div class="help-section">
+        <h3>ダッシュボード</h3>
+        <div class="help-rule"><span class="key">Today's Focus</span><span class="val"><strong>自分が動かせる仕事</strong>(進行中の数)+ 期限超過の警告。タップで該当タスクに絞り込み。</span></div>
+        <div class="help-rule"><span class="key">Awaiting</span><span class="val"><strong>他者・上長待ち</strong>の合計(依頼中+決裁待ち)。タップで一覧。</span></div>
+        <div class="help-rule"><span class="key">Today's Routines</span><span class="val">今日のDAILY+今日該当のWEEKLYの<strong>進捗率</strong>。タップでルーティン画面へ。</span></div>
+        <div class="help-rule"><span class="key">Overall Progress</span><span class="val">アクティブ全プロジェクトの<strong>加重完了率</strong>。タップで全体一覧。</span></div>
+        <div class="help-rule"><span class="key">スクロール時</span><span class="val">下にスクロールするとダッシュボードは<strong>自動で折りたたまれ</strong>、上部にはタブとフィルタが残ります。</span></div>
+      </div>
+      <div class="help-section">
         <h3>ステータス操作</h3>
         <div class="help-rule"><span class="key">丸タップ</span><span class="val">基本フローを順送り:<strong>未着手 → 進行中 → 依頼中 → 決裁待ち → 完了</strong> → 未着手 ...</span></div>
         <div class="status-legend">
@@ -1652,6 +1798,7 @@
     const btn = e.target.closest('.switch-btn');
     if (!btn) return;
     STATE.view = btn.dataset.view;
+    STATE.focusFilter = null;
     render();
     attachDragHandlers();
   });
@@ -1681,6 +1828,47 @@
     const act = t.dataset.act;
 
     if (act === 'modal-close') return closeModal();
+
+    // Dashboard jumps
+    if (act === 'jump-focus') {
+      STATE.view = 'projects';
+      STATE.focusFilter = 'today-focus';
+      STATE.activeFilters = [];
+      STATE.showArchived = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render(); attachDragHandlers();
+      return;
+    }
+    if (act === 'jump-awaiting') {
+      STATE.view = 'projects';
+      STATE.focusFilter = 'awaiting';
+      STATE.activeFilters = [];
+      STATE.showArchived = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render(); attachDragHandlers();
+      return;
+    }
+    if (act === 'jump-routines-today') {
+      STATE.view = 'routines';
+      STATE.cycle = 'daily';
+      STATE.focusFilter = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render(); attachDragHandlers();
+      return;
+    }
+    if (act === 'jump-projects') {
+      STATE.view = 'projects';
+      STATE.focusFilter = null;
+      STATE.activeFilters = [];
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render(); attachDragHandlers();
+      return;
+    }
+    if (act === 'clear-focus') {
+      STATE.focusFilter = null;
+      render(); attachDragHandlers();
+      return;
+    }
 
     // Filter
     if (act === 'filter-all') { STATE.activeFilters = []; render(); attachDragHandlers(); return; }
@@ -1976,6 +2164,17 @@
   window.addEventListener('beforeunload', (e) => {
     if (STATE.pendingSave) { saveDataNow(); e.preventDefault(); e.returnValue = ''; }
   });
+
+  // Scroll: collapse dashboard when scrolled
+  let scrollRaf = null;
+  window.addEventListener('scroll', () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = null;
+      const scrolled = window.scrollY > 60;
+      document.body.classList.toggle('scrolled', scrolled);
+    });
+  }, { passive: true });
 
   // ============ Init ============
   (async () => {
