@@ -263,6 +263,82 @@
   .cycle-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
   .cycle-tab { padding: 10px 22px; background: var(--bg-card); border: 1px solid var(--line); cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); min-height: 40px; flex-shrink: 0; }
   .cycle-tab.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+  /* WEEKLY sub-tabs (today / all) */
+  .weekly-subtabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    background: var(--line-soft);
+    padding: 3px;
+    border-radius: 100px;
+    width: fit-content;
+  }
+  .weekly-subtab {
+    padding: 7px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    border-radius: 100px;
+    transition: all 0.2s ease;
+  }
+  .weekly-subtab.active { background: var(--bg-card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+
+  /* Day-of-week selector chips (in routine modal) */
+  .dow-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+  }
+  .dow-chip {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .dow-chip.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .dow-chip.today-marker {
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+
+  /* Day-of-week badge on routine item */
+  .r-dow-badge {
+    display: inline-flex;
+    gap: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+  }
+  .r-dow-badge .dow-mini {
+    padding: 2px 6px;
+    background: var(--line-soft);
+    border-radius: 8px;
+  }
+  .r-dow-badge .dow-mini.today {
+    background: var(--accent);
+    color: white;
+  }
   .routine-list { background: var(--bg-card); border: 1px solid var(--line); }
   .routine-item { display: grid; grid-template-columns: 18px 28px 1fr auto auto; gap: 10px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line-soft); }
   .routine-item:last-child { border-bottom: none; }
@@ -513,6 +589,10 @@
       <button class="cycle-tab" data-cycle="weekly">WEEKLY</button>
       <button class="cycle-tab" data-cycle="monthly">MONTHLY</button>
     </div>
+    <div class="weekly-subtabs" id="weeklySubtabs" style="display:none">
+      <button class="weekly-subtab active" data-weekly-mode="today">今日のもの</button>
+      <button class="weekly-subtab" data-weekly-mode="all">全件</button>
+    </div>
     <div class="routine-list" id="routineList"></div>
   </section>
 </div>
@@ -525,6 +605,7 @@
   const STATE = {
     view: 'projects',
     cycle: 'daily',
+    weeklyMode: 'today', // 'today' or 'all'
     projects: [],
     routines: { daily: [], weekly: [], monthly: [] },
     routineLastReset: { daily: '', weekly: '', monthly: '' },
@@ -624,7 +705,12 @@
         }));
         STATE.routines = data.routines || { daily: [], weekly: [], monthly: [] };
         ['daily','weekly','monthly'].forEach(c => {
-          STATE.routines[c] = STATE.routines[c].map(r => ({ ...r, tagIds: r.tagIds || [] }));
+          STATE.routines[c] = STATE.routines[c].map(r => ({
+            ...r,
+            tagIds: r.tagIds || [],
+            // Weekly only: dayOfWeek is array of 0-6 (Sun-Sat). Empty = anytime.
+            dayOfWeek: r.dayOfWeek || []
+          }));
         });
         STATE.routineLastReset = data.routineLastReset || { daily:'', weekly:'', monthly:'' };
         STATE.tags = data.tags || [];
@@ -779,7 +865,18 @@
     });
   }
   function getFilteredRoutines(cycle) {
-    return STATE.routines[cycle].filter(r => matchesFilter(r.tagIds));
+    let items = STATE.routines[cycle].filter(r => matchesFilter(r.tagIds));
+    // Apply weekly day-of-week filter when in WEEKLY + today mode
+    if (cycle === 'weekly' && STATE.weeklyMode === 'today') {
+      const todayDow = new Date().getDay(); // 0=Sun ... 6=Sat
+      items = items.filter(r => {
+        // No day specified = "anytime this week" → always show
+        if (!r.dayOfWeek || r.dayOfWeek.length === 0) return true;
+        // Otherwise show only if today matches
+        return r.dayOfWeek.includes(todayDow);
+      });
+    }
+    return items;
   }
 
   // ============ Render ============
@@ -977,26 +1074,49 @@
     document.querySelectorAll('.cycle-tab').forEach(t => {
       t.classList.toggle('active', t.dataset.cycle === STATE.cycle);
     });
+    // Show/hide WEEKLY subtabs
+    const subtabs = document.getElementById('weeklySubtabs');
+    subtabs.style.display = STATE.cycle === 'weekly' ? 'flex' : 'none';
+    if (STATE.cycle === 'weekly') {
+      document.querySelectorAll('.weekly-subtab').forEach(b => {
+        b.classList.toggle('active', b.dataset.weeklyMode === STATE.weeklyMode);
+      });
+    }
+
     const list = document.getElementById('routineList');
     const items = getFilteredRoutines(STATE.cycle);
     if (items.length === 0) {
-      list.innerHTML = `<div class="empty"><div class="empty-art">— no routines —</div><p>${STATE.activeFilters.length > 0 ? '該当するルーティンがありません' : '習慣化したいタスクを追加しましょう'}</p></div>`;
+      const isFiltered = STATE.activeFilters.length > 0 || (STATE.cycle === 'weekly' && STATE.weeklyMode === 'today');
+      list.innerHTML = `<div class="empty"><div class="empty-art">— no routines —</div><p>${isFiltered ? '該当するルーティンがありません' : '習慣化したいタスクを追加しましょう'}</p></div>`;
       return;
     }
-    list.innerHTML = items.map(r => `
+    const todayDow = new Date().getDay();
+    list.innerHTML = items.map(r => {
+      const dowBadge = (STATE.cycle === 'weekly' && r.dayOfWeek && r.dayOfWeek.length > 0)
+        ? renderDowBadge(r.dayOfWeek, todayDow)
+        : '';
+      return `
       <div class="routine-item ${r.done ? 'done' : ''}" data-rid="${r.id}" draggable="true">
         <div class="routine-drag-handle" data-drag="routine" data-id="${r.id}">⋮⋮</div>
         <div class="check" data-act="toggle-r" data-id="${r.id}">✓</div>
         <div class="r-main">
           <div class="r-title" data-act="edit-r" data-id="${r.id}">${escapeHtml(r.title)}</div>
           ${renderTagPills(r.tagIds)}
+          ${dowBadge}
         </div>
         ${(r.streak || 0) > 0 ? `<div class="r-streak">🔥 ${r.streak}</div>` : '<div></div>'}
         <div class="r-actions">
           <button class="icon-btn" data-act="edit-r" data-id="${r.id}">✎</button>
           <button class="icon-btn danger" data-act="del-r" data-id="${r.id}">×</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
+  }
+  function renderDowBadge(dows, todayDow) {
+    const labels = ['日','月','火','水','木','金','土'];
+    return `<div class="r-dow-badge">${dows.slice().sort((a,b)=>a-b).map(d =>
+      `<span class="dow-mini ${d === todayDow ? 'today' : ''}">${labels[d]}</span>`
+    ).join('')}</div>`;
   }
   function escapeHtml(s) {
     if (!s) return '';
@@ -1234,6 +1354,13 @@
         <div class="help-rule"><span class="key">Routines</span><span class="val"><strong>繰り返し回す仕事</strong>。日次/週次/月次サイクル。</span></div>
       </div>
       <div class="help-section">
+        <h3>WEEKLY ルーティンの曜日指定</h3>
+        <div class="help-rule"><span class="key">曜日選択</span><span class="val">編集画面で<strong>月〜日のチップを選択</strong>。複数選択可。何も選ばないと「週内いつでもOK」扱い。</span></div>
+        <div class="help-rule"><span class="key">今日のもの</span><span class="val">WEEKLYタブの中で「今日のもの」を選ぶと、<strong>今日の曜日に該当するもの+曜日指定なしのもの</strong>だけ表示。</span></div>
+        <div class="help-rule"><span class="key">全件</span><span class="val">曜日に関係なく週次ルーティンを全表示。並べ替えや棚卸しに。</span></div>
+        <div class="help-rule"><span class="key">未達成</span><span class="val">指定曜日にやらなかった場合は<strong>未完了のまま週末を迎え、ストリークがリセット</strong>。長期ストリークが意味を持ちます。</span></div>
+      </div>
+      <div class="help-section">
         <h3>タグとフィルタ</h3>
         <div class="help-rule"><span class="key">タグ</span><span class="val">自由に追加・色変更可能。1項目に複数タグ付与可。<strong>「⚙ タグ管理」</strong>から編集。</span></div>
         <div class="help-rule"><span class="key">フィルタ</span><span class="val">画面上のタグチップで絞り込み。<strong>複数選択可</strong>(OR検索)。「ALL」で解除。</span></div>
@@ -1346,11 +1473,24 @@
   }
   function modalRoutine(routine) {
     const isNew = !routine;
-    const r = routine || { title: '', tagIds: [] };
+    const r = routine || { title: '', tagIds: [], dayOfWeek: [] };
+    const dowSection = STATE.cycle === 'weekly' ? `
+      <div class="field">
+        <label>曜日指定 <span style="text-transform:none; letter-spacing:0; font-weight:400; color:var(--ink-mute)">(選択しない場合は週内いつでもOK)</span></label>
+        <div class="dow-selector" id="dow-selector">
+          ${[0,1,2,3,4,5,6].map(d => {
+            const labels = ['日','月','火','水','木','金','土'];
+            const sel = (r.dayOfWeek || []).includes(d);
+            const isToday = d === new Date().getDay();
+            return `<div class="dow-chip ${sel ? 'selected' : ''} ${isToday ? 'today-marker' : ''}" data-act="toggle-dow" data-dow="${d}">${labels[d]}</div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
     openModal(`
       <h2>${isNew ? 'New Routine' : 'Edit Routine'}</h2>
       <div class="modal-sub">— ${STATE.cycle.toUpperCase()} routine</div>
       <div class="field"><label>ルーティン名</label><input id="r-title" value="${escapeHtml(r.title)}"></div>
+      ${dowSection}
       <div class="field"><label>タグ</label><div class="tag-selector" id="tag-selector">${renderTagSelectorChips(r.tagIds || [])}</div></div>
       <div class="modal-actions"><span></span><div class="right">
         <button class="btn ghost" data-act="modal-close">キャンセル</button>
@@ -1358,6 +1498,9 @@
       </div></div>
     `);
     setTimeout(() => document.getElementById('r-title')?.focus(), 100);
+  }
+  function getSelectedDows() {
+    return Array.from(document.querySelectorAll('.dow-chip.selected')).map(el => parseInt(el.dataset.dow, 10));
   }
 
   // Get currently selected tag IDs from modal selector
@@ -1412,6 +1555,13 @@
     const tab = e.target.closest('.cycle-tab');
     if (!tab) return;
     STATE.cycle = tab.dataset.cycle;
+    render();
+    attachDragHandlers();
+  });
+  document.getElementById('weeklySubtabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.weekly-subtab');
+    if (!tab) return;
+    STATE.weeklyMode = tab.dataset.weeklyMode;
     render();
     attachDragHandlers();
   });
@@ -1477,6 +1627,11 @@
     }
     // Tag selector toggle in modals
     if (act === 'toggle-tag-select') {
+      t.classList.toggle('selected');
+      return;
+    }
+    // Day-of-week toggle
+    if (act === 'toggle-dow') {
       t.classList.toggle('selected');
       return;
     }
@@ -1632,7 +1787,9 @@
     if (act === 'modal-save-r-new') {
       const title = document.getElementById('r-title').value.trim();
       if (!title) return;
-      STATE.routines[STATE.cycle].push({ id: pid(), title, done: false, streak: 0, tagIds: getSelectedTagIds() });
+      const newR = { id: pid(), title, done: false, streak: 0, tagIds: getSelectedTagIds(), dayOfWeek: [] };
+      if (STATE.cycle === 'weekly') newR.dayOfWeek = getSelectedDows();
+      STATE.routines[STATE.cycle].push(newR);
       closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
     if (act === 'modal-save-r-edit') {
@@ -1640,6 +1797,7 @@
       if (r) {
         r.title = document.getElementById('r-title').value.trim() || r.title;
         r.tagIds = getSelectedTagIds();
+        if (STATE.cycle === 'weekly') r.dayOfWeek = getSelectedDows();
       }
       closeModal(); render(); attachDragHandlers(); debouncedSave(); return;
     }
