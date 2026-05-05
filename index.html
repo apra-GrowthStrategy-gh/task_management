@@ -32,6 +32,12 @@
     --amber-soft: #f0e2c0;
     --red: #a84030;
     --red-soft: #f0d4d0;
+    --depend: #c8884a;
+    --depend-soft: #f0e0c8;
+    --approve: #7a5a8a;
+    --approve-soft: #e2d8e8;
+    --stay: #888;
+    --stay-soft: #d8d2c4;
     --shadow-lift: 0 2px 4px rgba(0,0,0,0.06), 0 12px 28px rgba(0,0,0,0.08);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -239,7 +245,10 @@
   .node-marker:active { transform: scale(0.92); }
   .node-row[data-status="done"] .node-marker { background: var(--green); border-color: var(--green); color: white; }
   .node-row[data-status="doing"] .node-marker { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 0 4px var(--accent-soft); }
-  .node-row[data-status="blocked"] .node-marker { background: var(--red); border-color: var(--red); color: white; }
+  .node-row[data-status="depend"] .node-marker { background: var(--depend); border-color: var(--depend); color: white; box-shadow: 0 0 0 4px var(--depend-soft); }
+  .node-row[data-status="approve"] .node-marker { background: var(--approve); border-color: var(--approve); color: white; box-shadow: 0 0 0 4px var(--approve-soft); }
+  .node-row[data-status="stay"] .node-marker { background: var(--stay); border-color: var(--stay); color: white; }
+  .node-row[data-status="stay"] .node-title { color: var(--ink-mute); font-style: italic; }
   .node-body { padding: 6px 0 10px; cursor: pointer; min-width: 0; }
   .node-title { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.5; margin-bottom: 5px; word-break: break-word; }
   .node-row[data-status="done"] .node-title { text-decoration: line-through; color: var(--ink-mute); }
@@ -453,8 +462,10 @@
   .legend-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; }
   .legend-dot.todo { background: var(--bg-card); border: 2px solid var(--line); color: var(--ink-mute); }
   .legend-dot.doing { background: var(--accent); color: white; }
+  .legend-dot.depend { background: var(--depend); color: white; }
+  .legend-dot.approve { background: var(--approve); color: white; }
   .legend-dot.done { background: var(--green); color: white; }
-  .legend-dot.blocked { background: var(--red); color: white; }
+  .legend-dot.stay { background: var(--stay); color: white; }
 
   .empty { text-align: center; padding: 60px 20px; color: var(--ink-mute); }
   .empty .empty-art { font-family: 'Fraunces', serif; font-style: italic; font-size: 30px; color: var(--line); margin-bottom: 12px; }
@@ -701,7 +712,11 @@
           ...p,
           tagIds: p.tagIds || [],
           archived: !!p.archived,
-          nodes: p.nodes || []
+          nodes: (p.nodes || []).map(n => ({
+            ...n,
+            // Migrate legacy 'blocked' status to 'stay'
+            status: n.status === 'blocked' ? 'stay' : n.status
+          }))
         }));
         STATE.routines = data.routines || { daily: [], weekly: [], monthly: [] };
         ['daily','weekly','monthly'].forEach(c => {
@@ -809,6 +824,26 @@
     };
   }
   function pid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  // Status definitions (single source of truth)
+  const STATUS_LABELS = {
+    todo: '未着手',
+    doing: '進行中',
+    depend: '依頼中',
+    approve: '決裁待ち',
+    done: '完了',
+    stay: 'ステイ'
+  };
+  const STATUS_MARKERS = {
+    todo: null,  // shows index number
+    doing: '●',
+    depend: '→',
+    approve: '↑',
+    done: '✓',
+    stay: '‖'
+  };
+  // Tap-cycle order (excludes "stay" - that's toggled via long-press only)
+  const STATUS_CYCLE = ['todo', 'doing', 'depend', 'approve', 'done'];
 
   function checkRoutineReset() {
     const now = new Date();
@@ -957,15 +992,18 @@
     if (STATE.view === 'projects') {
       const filtered = getFilteredProjects();
       const allNodes = filtered.flatMap(p => p.nodes);
-      const done = allNodes.filter(n => n.status === 'done').length;
       const doing = allNodes.filter(n => n.status === 'doing').length;
-      const blocked = allNodes.filter(n => n.status === 'blocked').length;
-      const total = allNodes.length || 1;
-      const pct = Math.round((done / total) * 100);
+      const awaiting = allNodes.filter(n => n.status === 'depend' || n.status === 'approve').length;
+      const stayed = allNodes.filter(n => n.status === 'stay').length;
+      // Progressive completion: todo=0, doing=25, depend=50, approve=75, done=100, stay=excluded from calc
+      const STATUS_WEIGHT = { todo: 0, doing: 0.25, depend: 0.5, approve: 0.75, done: 1 };
+      const activeNodes = allNodes.filter(n => n.status !== 'stay');
+      const sumWeight = activeNodes.reduce((s, n) => s + (STATUS_WEIGHT[n.status] || 0), 0);
+      const pct = activeNodes.length > 0 ? Math.round((sumWeight / activeNodes.length) * 100) : 0;
       row.innerHTML = `
-        <div class="stat"><div class="label">Active Projects</div><div class="value">${filtered.length}<span class="unit">件</span></div></div>
         <div class="stat"><div class="label">In Progress</div><div class="value">${doing}<span class="unit">node</span></div></div>
-        <div class="stat"><div class="label">Blocked</div><div class="value">${blocked}<span class="unit">node</span></div></div>
+        <div class="stat"><div class="label">Awaiting · 他者待ち</div><div class="value">${awaiting}<span class="unit">node</span></div></div>
+        <div class="stat"><div class="label">On Stay</div><div class="value">${stayed}<span class="unit">node</span></div></div>
         <div class="stat"><div class="label">Completion</div><div class="value">${pct}<span class="unit">%</span></div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
     } else {
       const cur = getFilteredRoutines(STATE.cycle);
@@ -1004,9 +1042,11 @@
     }).join('')}</div>`;
   }
   function renderProject(p) {
-    const total = p.nodes.length || 1;
+    const STATUS_WEIGHT = { todo: 0, doing: 0.25, depend: 0.5, approve: 0.75, done: 1 };
     const done = p.nodes.filter(n => n.status === 'done').length;
-    const pct = Math.round((done / total) * 100);
+    const activeNodes = p.nodes.filter(n => n.status !== 'stay');
+    const sumWeight = activeNodes.reduce((s, n) => s + (STATUS_WEIGHT[n.status] || 0), 0);
+    const pct = activeNodes.length > 0 ? Math.round((sumWeight / activeNodes.length) * 100) : 0;
     const r = 14, c = 2 * Math.PI * r, off = c - (pct / 100) * c;
     return `
       <div class="project-card ${p.archived ? 'archived' : ''}" data-pjid="${p.id}" draggable="true">
@@ -1044,7 +1084,7 @@
   }
   function renderNode(pjId, n, idx) {
     const num = String(idx + 1).padStart(2, '0');
-    const marker = n.status === 'done' ? '✓' : n.status === 'doing' ? '●' : n.status === 'blocked' ? '!' : num;
+    const marker = STATUS_MARKERS[n.status] || num;
     const priorityPill = n.priority ? `<span class="pill priority-${n.priority}">${n.priority === 'high' ? 'HIGH' : n.priority === 'mid' ? 'MID' : 'LOW'}</span>` : '';
     let duePill = '';
     if (n.due) {
@@ -1130,6 +1170,10 @@
     return TAG_COLORS[STATE.tags.length % TAG_COLORS.length];
   }
 
+  // Long-press detection state
+  let longPressTimer = null;
+  let suppressNextClick = false;
+
   function attachDragHandlers() {
     // Desktop HTML5 drag
     document.querySelectorAll('[draggable="true"]').forEach(el => {
@@ -1143,6 +1187,59 @@
     document.querySelectorAll('[data-drag]').forEach(handle => {
       handle.addEventListener('touchstart', onTouchStart, { passive: false });
     });
+    // Long-press on node markers for stay toggle
+    document.querySelectorAll('.node-marker[data-act="cycle-status"]').forEach(el => {
+      attachLongPressForStay(el);
+    });
+  }
+
+  function attachLongPressForStay(el) {
+    let pressTimer = null;
+    let pressed = false;
+
+    const start = (clientX, clientY) => {
+      pressed = true;
+      pressTimer = setTimeout(() => {
+        if (!pressed) return;
+        suppressNextClick = true;
+        // Trigger stay toggle programmatically
+        const pjid = el.dataset.pjid;
+        const id = el.dataset.id;
+        const p = STATE.projects.find(x => x.id === pjid);
+        const n = p?.nodes.find(x => x.id === id);
+        if (n) {
+          if (n.status === 'stay') {
+            n.status = n.prevStatus || 'todo';
+            delete n.prevStatus;
+          } else {
+            n.prevStatus = n.status;
+            n.status = 'stay';
+          }
+          // Visual feedback: subtle pulse
+          el.style.transform = 'scale(1.15)';
+          setTimeout(() => { el.style.transform = ''; }, 150);
+          render();
+          attachDragHandlers();
+          debouncedSave();
+        }
+      }, 500);
+    };
+    const cancel = () => {
+      pressed = false;
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    };
+
+    el.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
+    el.addEventListener('mouseup', cancel);
+    el.addEventListener('mouseleave', cancel);
+
+    el.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      start(t.clientX, t.clientY);
+    }, { passive: true });
+    el.addEventListener('touchend', cancel);
+    el.addEventListener('touchcancel', cancel);
+    el.addEventListener('touchmove', cancel);
   }
 
   function onDragStart(e) {
@@ -1379,13 +1476,18 @@
       </div>
       <div class="help-section">
         <h3>ステータス操作</h3>
-        <div class="help-rule"><span class="key">丸タップ</span><span class="val">未着手→進行中→完了→ブロック中、と循環。</span></div>
+        <div class="help-rule"><span class="key">丸タップ</span><span class="val">基本フローを順送り:<strong>未着手 → 進行中 → 依頼中 → 決裁待ち → 完了</strong> → 未着手 ...</span></div>
         <div class="status-legend">
-          <div class="legend-row"><div class="legend-dot todo">01</div>未着手</div>
-          <div class="legend-row"><div class="legend-dot doing">●</div>進行中</div>
-          <div class="legend-row"><div class="legend-dot done">✓</div>完了</div>
-          <div class="legend-row"><div class="legend-dot blocked">!</div>ブロック中</div>
+          <div class="legend-row"><div class="legend-dot todo">01</div><strong>未着手</strong> — まだ手をつけていない</div>
+          <div class="legend-row"><div class="legend-dot doing">●</div><strong>進行中</strong> — 自分がボールを持っている</div>
+          <div class="legend-row"><div class="legend-dot depend">→</div><strong>依頼中</strong> — 他部署/他メンバーがボール</div>
+          <div class="legend-row"><div class="legend-dot approve">↑</div><strong>決裁待ち</strong> — 上長の承認・確認待ち</div>
+          <div class="legend-row"><div class="legend-dot done">✓</div><strong>完了</strong> — 終わった</div>
+          <div class="legend-row"><div class="legend-dot stay">‖</div><strong>ステイ</strong> — 一時停止・保留中</div>
         </div>
+        <div class="help-rule" style="margin-top:14px"><span class="key">長押し</span><span class="val"><strong>丸を長押し(0.5秒)</strong>でステイにトグル。停止する前のステータスを記憶しているので、もう一度長押し or 短タップで元の状態に復帰します。</span></div>
+        <div class="help-rule"><span class="key">完了率</span><span class="val">未着手0% / 進行中25% / 依頼中50% / 決裁待ち75% / 完了100% で加重計算。ステイは計算から除外されます。</span></div>
+        <div class="help-rule"><span class="key">統計</span><span class="val">「In Progress(自分が動かしてる)」「Awaiting(他者・上長待ち)」「On Stay(停止中)」を分けて表示。ボトルネックが一目で分かります。</span></div>
       </div>
       <div class="help-section">
         <h3>同期</h3>
@@ -1450,8 +1552,10 @@
         <div class="field"><label>ステータス</label><select id="n-status">
           <option value="todo" ${n.status==='todo'?'selected':''}>未着手</option>
           <option value="doing" ${n.status==='doing'?'selected':''}>進行中</option>
+          <option value="depend" ${n.status==='depend'?'selected':''}>依頼中</option>
+          <option value="approve" ${n.status==='approve'?'selected':''}>決裁待ち</option>
           <option value="done" ${n.status==='done'?'selected':''}>完了</option>
-          <option value="blocked" ${n.status==='blocked'?'selected':''}>ブロック中</option>
+          <option value="stay" ${n.status==='stay'?'selected':''}>ステイ</option>
         </select></div>
         <div class="field"><label>優先度</label><select id="n-priority">
           <option value="high" ${n.priority==='high'?'selected':''}>HIGH</option>
@@ -1716,11 +1820,38 @@
     // Node ops
     if (act === 'cycle-status') {
       e.stopPropagation();
+      // If long-press fired, the click is suppressed via flag
+      if (suppressNextClick) { suppressNextClick = false; return; }
       const p = STATE.projects.find(x => x.id === t.dataset.pjid);
       const n = p?.nodes.find(x => x.id === t.dataset.id);
       if (n) {
-        const order = ['todo', 'doing', 'done', 'blocked'];
-        n.status = order[(order.indexOf(n.status) + 1) % order.length];
+        // If currently 'stay', short tap returns to previous status (or todo)
+        if (n.status === 'stay') {
+          n.status = n.prevStatus || 'todo';
+          delete n.prevStatus;
+        } else {
+          const idx = STATUS_CYCLE.indexOf(n.status);
+          n.status = idx < 0 ? 'todo' : STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+        }
+        render(); attachDragHandlers(); debouncedSave();
+      }
+      return;
+    }
+    if (act === 'toggle-stay') {
+      // Triggered by long-press detection
+      e.stopPropagation();
+      const p = STATE.projects.find(x => x.id === t.dataset.pjid);
+      const n = p?.nodes.find(x => x.id === t.dataset.id);
+      if (n) {
+        if (n.status === 'stay') {
+          // Resume from stay
+          n.status = n.prevStatus || 'todo';
+          delete n.prevStatus;
+        } else {
+          // Park to stay, remember previous state
+          n.prevStatus = n.status;
+          n.status = 'stay';
+        }
         render(); attachDragHandlers(); debouncedSave();
       }
       return;
