@@ -495,6 +495,41 @@
     background: linear-gradient(to right, rgba(184,70,42,0.02), transparent);
     gap: 12px;
   }
+  /* Up/Down move buttons (for projects, nodes, routines) */
+  .move-btns {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 1px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .move-btn {
+    width: 22px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    color: var(--ink-mute);
+    font-size: 9px;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s ease;
+  }
+  .move-btn:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .move-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+  .move-btn.up { border-radius: 4px 4px 0 0; border-bottom: none; }
+  .move-btn.down { border-radius: 0 0 4px 4px; }
+
   .drag-handle {
     width: 22px; height: 22px;
     display: flex; align-items: center; justify-content: center;
@@ -538,8 +573,8 @@
   .project-head-main { flex: 1; min-width: 0; }
 
   .nodes { padding: 22px 18px 24px; position: relative; }
-  .node-row { display: grid; grid-template-columns: 18px 32px 1fr; gap: 8px; position: relative; padding-bottom: 10px; align-items: start; }
-  .node-row::before { content: ''; position: absolute; left: 41px; top: 32px; bottom: -2px; width: 1px; background: var(--line); }
+  .node-row { display: grid; grid-template-columns: 26px 32px 1fr; gap: 8px; position: relative; padding-bottom: 10px; align-items: start; }
+  .node-row::before { content: ''; position: absolute; left: 49px; top: 32px; bottom: -2px; width: 1px; background: var(--line); }
   .node-row:last-of-type::before { display: none; }
   .node-row.dragging { opacity: 0.4; }
   .node-row.drag-over-top { box-shadow: 0 -2px 0 var(--accent); }
@@ -581,7 +616,7 @@
   .pill.due-soon { background: var(--amber-soft); border-color: var(--amber); color: #8a6820; }
   .node-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; padding: 8px 10px; background: var(--line-soft); border-left: 2px solid var(--gold); line-height: 1.6; word-break: break-word; }
 
-  .add-node-row { display: grid; grid-template-columns: 18px 32px 1fr; gap: 8px; margin-top: 4px; }
+  .add-node-row { display: grid; grid-template-columns: 26px 32px 1fr; gap: 8px; margin-top: 4px; }
   .add-node-btn { background: transparent; border: 1px dashed var(--line); padding: 10px 14px; text-align: left; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--ink-mute); transition: all 0.2s ease; min-height: 40px; }
   .add-node-btn:hover, .add-node-btn:active { border-color: var(--accent); color: var(--accent); }
   .add-project-btn { width: 100%; padding: 18px; background: transparent; border: 1px dashed var(--line); cursor: pointer; font-family: 'Fraunces', serif; font-size: 15px; color: var(--ink-mute); transition: all 0.2s ease; margin-top: 12px; }
@@ -669,7 +704,7 @@
     color: white;
   }
   .routine-list { background: var(--bg-card); border: 1px solid var(--line); }
-  .routine-item { display: grid; grid-template-columns: 18px 28px 1fr auto auto; gap: 10px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line-soft); }
+  .routine-item { display: grid; grid-template-columns: 26px 28px 1fr auto auto; gap: 10px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line-soft); }
   .routine-item:last-child { border-bottom: none; }
   .routine-item.dragging { opacity: 0.4; }
   .routine-item.drag-over-top { box-shadow: 0 -2px 0 var(--accent); }
@@ -840,14 +875,14 @@
     .project-head h3 { font-size: 17px; }
     .project-head .pj-meta { width: 100%; justify-content: space-between; gap: 8px; padding-left: 30px; }
     .nodes { padding: 16px 12px 18px; }
-    .node-row { grid-template-columns: 16px 28px 1fr; gap: 6px; }
-    .node-row::before { left: 35px; top: 28px; }
+    .node-row { grid-template-columns: 24px 28px 1fr; gap: 6px; }
+    .node-row::before { left: 43px; top: 28px; }
     .node-marker { width: 28px; height: 28px; font-size: 11px; }
-    .add-node-row { grid-template-columns: 16px 28px 1fr; gap: 6px; }
+    .add-node-row { grid-template-columns: 24px 28px 1fr; gap: 6px; }
     .field-row { grid-template-columns: 1fr; }
     .modal { padding: 22px 20px calc(22px + var(--safe-bottom)); max-height: 100vh; max-height: 100dvh; width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; }
     .modal-bg { padding: 0; align-items: flex-end; }
-    .routine-item { grid-template-columns: 16px 26px 1fr auto; gap: 8px; padding: 12px 14px; }
+    .routine-item { grid-template-columns: 24px 26px 1fr auto; gap: 8px; padding: 12px 14px; }
     .routine-item .r-actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: -2px; }
     .setup-screen { margin: 30px auto; }
     .setup-card { padding: 24px 20px; }
@@ -1697,10 +1732,18 @@
     const sumWeight = activeNodes.reduce((s, n) => s + (STATUS_WEIGHT[n.status] || 0), 0);
     const pct = activeNodes.length > 0 ? Math.round((sumWeight / activeNodes.length) * 100) : 0;
     const r = 14, c = 2 * Math.PI * r, off = c - (pct / 100) * c;
+    // Index in full STATE.projects (so move buttons work across archived)
+    const pjIdx = STATE.projects.findIndex(x => x.id === p.id);
+    const pjFirst = pjIdx <= 0;
+    const pjLast = pjIdx >= STATE.projects.length - 1;
     return `
       <div class="project-card ${p.archived ? 'archived' : ''}" data-pjid="${p.id}" draggable="true">
         <div class="project-head">
           <div class="drag-handle" data-drag="project" data-id="${p.id}">⋮⋮</div>
+          <div class="move-btns">
+            <button class="move-btn up" data-act="move-pj-up" data-id="${p.id}" ${pjFirst ? 'disabled' : ''} title="上へ">▲</button>
+            <button class="move-btn down" data-act="move-pj-down" data-id="${p.id}" ${pjLast ? 'disabled' : ''} title="下へ">▼</button>
+          </div>
           <div class="project-head-main">
             <h3>${escapeHtml(p.title)}</h3>
             ${renderTagPills(p.tagIds)}
@@ -1744,9 +1787,21 @@
       else if (diff <= 3 && n.status !== 'done') cls = 'due-soon';
       duePill = `<span class="pill ${cls}">${n.due}</span>`;
     }
+    // For move buttons: find this node's position in its parent project's nodes array
+    const parent = STATE.projects.find(p => p.id === pjId);
+    const parentNodes = parent ? parent.nodes : [];
+    const nodeIdx = parentNodes.findIndex(x => x.id === n.id);
+    const nFirst = nodeIdx <= 0;
+    const nLast = nodeIdx >= parentNodes.length - 1;
     return `
       <div class="node-row" data-status="${n.status}" data-nid="${n.id}" draggable="true">
-        <div class="node-drag-handle" data-drag="node" data-pjid="${pjId}" data-id="${n.id}">⋮⋮</div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+          <div class="node-drag-handle" data-drag="node" data-pjid="${pjId}" data-id="${n.id}">⋮⋮</div>
+          <div class="move-btns">
+            <button class="move-btn up" data-act="move-node-up" data-pjid="${pjId}" data-id="${n.id}" ${nFirst ? 'disabled' : ''} title="上へ">▲</button>
+            <button class="move-btn down" data-act="move-node-down" data-pjid="${pjId}" data-id="${n.id}" ${nLast ? 'disabled' : ''} title="下へ">▼</button>
+          </div>
+        </div>
         <div class="node-marker" data-act="cycle-status" data-pjid="${pjId}" data-id="${n.id}">${marker}</div>
         <div class="node-body" data-act="edit-node" data-pjid="${pjId}" data-id="${n.id}">
           <div class="node-title">${escapeHtml(n.title)}</div>
@@ -1780,13 +1835,24 @@
       return;
     }
     const todayDow = new Date().getDay();
+    const fullList = STATE.routines[STATE.cycle];
     list.innerHTML = items.map(r => {
       const dowBadge = (STATE.cycle === 'weekly' && r.dayOfWeek && r.dayOfWeek.length > 0)
         ? renderDowBadge(r.dayOfWeek, todayDow)
         : '';
+      // Position in full cycle list (not filtered) for move buttons
+      const rIdx = fullList.findIndex(x => x.id === r.id);
+      const rFirst = rIdx <= 0;
+      const rLast = rIdx >= fullList.length - 1;
       return `
       <div class="routine-item ${r.done ? 'done' : ''}" data-rid="${r.id}" draggable="true">
-        <div class="routine-drag-handle" data-drag="routine" data-id="${r.id}">⋮⋮</div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+          <div class="routine-drag-handle" data-drag="routine" data-id="${r.id}">⋮⋮</div>
+          <div class="move-btns">
+            <button class="move-btn up" data-act="move-r-up" data-id="${r.id}" ${rFirst ? 'disabled' : ''} title="上へ">▲</button>
+            <button class="move-btn down" data-act="move-r-down" data-id="${r.id}" ${rLast ? 'disabled' : ''} title="下へ">▼</button>
+          </div>
+        </div>
         <div class="check" data-act="toggle-r" data-id="${r.id}">✓</div>
         <div class="r-main">
           <div class="r-title" data-act="edit-r" data-id="${r.id}">${escapeHtml(r.title)}</div>
@@ -2042,6 +2108,24 @@
     if (position === 'after') insertIdx++;
     arr.splice(insertIdx, 0, item);
     render();
+    attachDragHandlers();
+    debouncedSave();
+  }
+
+  // Move item up/down by one position (used by ▲▼ buttons)
+  function moveItem(type, id, parentId, direction) {
+    let arr;
+    if (type === 'project') arr = STATE.projects;
+    else if (type === 'node') arr = STATE.projects.find(p => p.id === parentId)?.nodes;
+    else if (type === 'routine') arr = STATE.routines[STATE.cycle];
+    if (!arr) return;
+    const idx = arr.findIndex(x => x.id === id);
+    if (idx < 0) return;
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= arr.length) return;
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    render();
+    attachDragHandlers();
     debouncedSave();
   }
 
@@ -2114,7 +2198,8 @@
       </div>
       <div class="help-section">
         <h3>並べ替え</h3>
-        <div class="help-rule"><span class="key">⋮⋮</span><span class="val">左の<strong>ドラッグハンドル</strong>を掴んで上下に動かすと、順序を変更できます。プロジェクト・ノード・ルーティンすべてで可能。</span></div>
+        <div class="help-rule"><span class="key">▲▼</span><span class="val">各項目の左にある<strong>上下ボタン</strong>で1段ずつ移動。一番上・下にあるときはボタンが薄くなって押せません。<strong>ピンポイントで微調整したいときに便利</strong>。</span></div>
+        <div class="help-rule"><span class="key">⋮⋮</span><span class="val">左の<strong>ドラッグハンドル</strong>を掴んで上下に動かすと、大きく動かせます。プロジェクト・ノード・ルーティンすべてで可能。</span></div>
         <div class="help-rule"><span class="key">PC</span><span class="val">ハンドルをマウスでドラッグ。</span></div>
         <div class="help-rule"><span class="key">スマホ</span><span class="val">ハンドルを<strong>長押し→そのまま指を動かす</strong>。</span></div>
       </div>
@@ -2507,6 +2592,13 @@
       if (p) modalEditProject(p);
       return;
     }
+    // Move buttons
+    if (act === 'move-pj-up') { e.stopPropagation(); moveItem('project', t.dataset.id, null, 'up'); return; }
+    if (act === 'move-pj-down') { e.stopPropagation(); moveItem('project', t.dataset.id, null, 'down'); return; }
+    if (act === 'move-node-up') { e.stopPropagation(); moveItem('node', t.dataset.id, t.dataset.pjid, 'up'); return; }
+    if (act === 'move-node-down') { e.stopPropagation(); moveItem('node', t.dataset.id, t.dataset.pjid, 'down'); return; }
+    if (act === 'move-r-up') { e.stopPropagation(); moveItem('routine', t.dataset.id, null, 'up'); return; }
+    if (act === 'move-r-down') { e.stopPropagation(); moveItem('routine', t.dataset.id, null, 'down'); return; }
     if (act === 'toggle-archive-pj') {
       e.stopPropagation();
       const p = STATE.projects.find(x => x.id === t.dataset.id);
